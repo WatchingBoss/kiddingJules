@@ -1,0 +1,6 @@
+aiohttp
+feedparser
+beautifulsoup4
+lxml
+SQLAlchemy
+aiosqlite
