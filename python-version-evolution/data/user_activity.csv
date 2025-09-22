@@ -1,0 +1,13 @@
+user_id,timestamp,action,product_id,price
+101,2023-01-15T08:00:00Z,action:login,,
+102,2023-01-15T08:05:00Z,action:login,,
+101,2023-01-15T08:10:00Z,view_item,prod_A123,99.99
+103,2023-01-15T08:12:00Z,action:login,,
+102,2023-01-15T08:15:00Z,purchase,prod_B456,19.50
+101,2023-01-15T08:20:00Z,purchase,prod_A123,99.99
+104,2023-01-15T08:25:00Z,action:login,,
+103,2023-01-15T08:30:00Z,view_item,prod_C789,5.00
+102,2023-01-15T08:35:00Z,logout,,
+101,2023-01-15T08:40:00Z,logout,,
+104,2023-01-15T08:45:00Z,view_item,prod_D101,250.75
+103,2023-01-15T08:50:00Z,purchase,prod_C789,5.00
