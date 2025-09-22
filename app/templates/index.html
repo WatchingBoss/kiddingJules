@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if request.cookies.get("user") %}
+        <h1>Welcome, {{ request.cookies.get("user") }}!</h1>
+        <a href="/logout">Logout</a>
+    {% else %}
+        <h1>Welcome!</h1>
+        <a href="/signup">Sign Up</a>
+        <a href="/signin">Sign In</a>
+    {% endif %}
+{% endblock %}
