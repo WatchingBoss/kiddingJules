@@ -1,5 +1,5 @@
 import flet as ft
-from book_manager.book import Book, generate_books, save_books, load_books
+from book import Book, generate_books, save_books, load_books
 import os
 
 # Constants
@@ -43,7 +43,7 @@ def main(page: ft.Page):
             ],
             scroll=ft.ScrollMode.AUTO,
         ),
-        border=ft.border.all(1, ft.colors.GREY_400),
+        border=ft.border.all(1, ft.Colors.GREY_400),
         border_radius=10,
         padding=10,
         expand=True,
@@ -82,10 +82,10 @@ def main(page: ft.Page):
             ft.DataColumn(ft.Text("Language"), on_sort=on_sort),
         ],
         rows=[],
-        border=ft.border.all(1, ft.colors.GREY_400),
-        vertical_lines=ft.border.BorderSide(1, ft.colors.GREY_400),
-        horizontal_lines=ft.border.BorderSide(1, ft.colors.GREY_400),
-        heading_row_color=ft.colors.BLUE_GREY_50,
+        border=ft.border.all(1, ft.Colors.GREY_400),
+        vertical_lines=ft.border.BorderSide(1, ft.Colors.GREY_400),
+        horizontal_lines=ft.border.BorderSide(1, ft.Colors.GREY_400),
+        heading_row_color=ft.Colors.BLUE_GREY_50,
     )
 
     def on_select_book(e):
@@ -251,7 +251,7 @@ def main(page: ft.Page):
 
     add_area_container = ft.Container(
         padding=10,
-        border=ft.border.all(1, ft.colors.GREY_400),
+        border=ft.border.all(1, ft.Colors.GREY_400),
         border_radius=10,
         expand=True
     )
@@ -333,7 +333,7 @@ def main(page: ft.Page):
     main_row = ft.Row(
         controls=[
             ft.Container(content=left_column, expand=2, padding=10), # Left takes 2/3 width
-            ft.VerticalDivider(width=1, color=ft.colors.GREY_400),
+            ft.VerticalDivider(width=1, color=ft.Colors.GREY_400),
             ft.Container(content=right_column, expand=1, padding=10)  # Right takes 1/3 width
         ],
         expand=True,
