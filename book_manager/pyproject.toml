@@ -1,0 +1,10 @@
+[project]
+name = "book-manager"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "faker>=38.2.0",
+    "flet[all]>=0.28.3",
+]
