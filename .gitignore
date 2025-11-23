@@ -1,4 +1,2 @@
 __pycache__/
 *.pyc
-book_manager/uv.lock
-*.json

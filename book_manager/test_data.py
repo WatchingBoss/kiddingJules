@@ -1,5 +1,5 @@
 import os
-from book_manager.book import generate_books, save_books, load_books, Book
+from book import generate_books, save_books, load_books, Book
 
 def test_data_generation_and_persistence():
     print("Testing Data Generation...")

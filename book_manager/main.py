@@ -1,5 +1,5 @@
 import flet as ft
-from book_manager.book import Book, generate_books, save_books, load_books
+from book import Book, generate_books, save_books, load_books
 import os
 
 # Constants
