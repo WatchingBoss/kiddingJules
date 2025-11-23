@@ -1,6 +1,2 @@
 __pycache__/
 *.pyc
-book_manager/.python-version
-book_manager/books.json
-book_manager/pyproject.toml
-book_manager/uv.lock

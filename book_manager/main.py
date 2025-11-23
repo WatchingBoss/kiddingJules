@@ -209,8 +209,10 @@ def main(page: ft.Page):
         txt_desc.value = ""
 
         # If inside dialog, close it
+        # Flet 0.21+ uses page.close(dlg)
         if dlg_modal.open:
-            dlg_modal.open = False
+            page.close(dlg_modal)
+
         page.update()
 
     btn_add = ft.ElevatedButton("Add Book", on_click=add_book_action)
@@ -238,34 +240,11 @@ def main(page: ft.Page):
             txt_title, txt_year, txt_author, txt_genre, txt_language, txt_desc
         ], height=400, scroll=ft.ScrollMode.AUTO),
         actions=[
-            ft.TextButton("Cancel", on_click=lambda e: setattr(dlg_modal, 'open', False) or page.update()),
+            ft.TextButton("Cancel", on_click=lambda e: page.close(dlg_modal)),
             ft.TextButton("Add", on_click=add_book_action),
         ],
         actions_alignment=ft.MainAxisAlignment.END,
     )
-
-    def open_dlg(e):
-        # We need to make sure the fields are not parented by the inline form if we want to show them in dialog
-        # Flet controls can only have one parent.
-        # So we need two sets of controls OR we reparent them.
-        # Reparenting is tricky. Easier to have the form construction be dynamic or just share the logic.
-        # But wait, the prompt implies ONE form area that switches location or a switch that changes behavior.
-        # "Add switch to choose the area of adding book information... 2 variants: popup windows and area on the top right"
-
-        # If I use the SAME TextFields, I must remove them from one container and add to another.
-        # Let's try to keep it simple:
-        # The "Right Top" area will verify the mode.
-        # If Inline: it shows the form.
-        # If Popup: it shows a button "Open Form".
-
-        # But the Form itself (the TextFields) must move.
-        # Let's implement a function to render the Right Top Area.
-        render_add_area()
-
-        if add_mode_switch.value: # Popup mode
-            page.dialog = dlg_modal
-            dlg_modal.open = True
-            page.update()
 
     # Switch for Add Mode
     # False = Inline, True = Popup
@@ -298,9 +277,8 @@ def main(page: ft.Page):
             add_area_container.content = ft.Column([
                 ft.Row([ft.Text("Add Book Mode"), add_mode_switch], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Divider(),
-                ft.ElevatedButton("Open Add Book Dialog", on_click=lambda _: setattr(dlg_modal, 'open', True) or page.update())
+                ft.ElevatedButton("Open Add Book Dialog", on_click=lambda _: page.open(dlg_modal))
             ])
-            page.dialog = dlg_modal
         else:
             # Inline Mode
             # Ensure we unset the dialog so it's not part of the tree anymore (conceptually)
