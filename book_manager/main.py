@@ -1,5 +1,5 @@
 import flet as ft
-from book import Book, generate_books, save_books, load_books
+from book_manager.book import Book, generate_books, save_books, load_books
 import os
 
 # Constants
@@ -54,33 +54,45 @@ def main(page: ft.Page):
         nonlocal sort_ascending, current_sort_column_index
 
         idx = e.column_index
-        if current_sort_column_index == idx:
+
+        # We need to map the clicked column index back to the actual field key
+        # because the columns might be dynamic.
+        # books_table.columns contains only visible columns now.
+        clicked_column = books_table.columns[idx]
+        header_text = clicked_column.label.value.lower() # "Title", "Year", etc.
+
+        # Check if we are sorting by the same column
+        # We must compare the header_text or logic because indices change.
+        # We'll use a custom data property on DataColumn if possible, but label is reliable here.
+
+        # Determine if we are re-sorting same column or new one
+        # Logic: check if the previously sorted column is the same as this one
+        # But current_sort_column_index stores an index, which is unstable.
+        # We should store the sorted field name instead.
+
+        if current_sort_column_index == header_text: # Re-purposing variable for field name
             sort_ascending = not sort_ascending
         else:
             sort_ascending = True
-            current_sort_column_index = idx
-
-        # Get the key to sort by
-        header_text = books_table.columns[idx].label.value.lower()
+            current_sort_column_index = header_text
 
         # Sort books
         books.sort(key=lambda b: getattr(b, header_text), reverse=not sort_ascending)
 
-        # Update arrows
-        books_table.sort_column_index = idx
-        books_table.sort_ascending = sort_ascending
-
         update_table()
         page.update()
 
+    # Initial columns configuration
+    all_columns_def = [
+        ("title", "Title", False),
+        ("year", "Year", True),
+        ("author", "Author", False),
+        ("genre", "Genre", False),
+        ("language", "Language", False),
+    ]
+
     books_table = ft.DataTable(
-        columns=[
-            ft.DataColumn(ft.Text("Title"), on_sort=on_sort),
-            ft.DataColumn(ft.Text("Year"), numeric=True, on_sort=on_sort),
-            ft.DataColumn(ft.Text("Author"), on_sort=on_sort),
-            ft.DataColumn(ft.Text("Genre"), on_sort=on_sort),
-            ft.DataColumn(ft.Text("Language"), on_sort=on_sort),
-        ],
+        columns=[], # Will be populated by update_table
         rows=[],
         border=ft.border.all(1, ft.Colors.GREY_400),
         vertical_lines=ft.border.BorderSide(1, ft.Colors.GREY_400),
@@ -89,33 +101,43 @@ def main(page: ft.Page):
     )
 
     def on_select_book(e):
-        # e.control is the DataRow
-        # We need to find which book corresponds to this row.
-        # Since we rebuild rows on sort/add, we can store the book in the row's data property if available,
-        # or just use the index if we are careful.
-        # A safer way: store the book object in the data property of the row.
         selected_book = e.control.data
         description_text.value = selected_book.description
         page.update()
 
     def update_table():
-        # Rebuild rows based on 'books' list and visibility
-        # Note: DataColumn visibility hides the whole column.
+        # Rebuild columns based on visibility
+        new_columns = []
 
-        # Update column visibility
-        cols = ["title", "year", "author", "genre", "language"]
-        for i, col_key in enumerate(cols):
-            books_table.columns[i].visible = column_visibility[col_key]
+        # We need to know which index is the sorted one to set the arrow
+        sorted_idx = None
 
+        visible_keys = []
+
+        for i, (key, label, is_numeric) in enumerate(all_columns_def):
+            if column_visibility[key]:
+                # This column is visible
+                col = ft.DataColumn(ft.Text(label), numeric=is_numeric, on_sort=on_sort)
+                new_columns.append(col)
+                visible_keys.append(key)
+
+                # Check if this is the sorted column
+                # Note: current_sort_column_index is now storing the key string (e.g., "title")
+                if current_sort_column_index == key:
+                    sorted_idx = len(new_columns) - 1 # The index in the NEW list
+
+        books_table.columns = new_columns
+        books_table.sort_column_index = sorted_idx
+        books_table.sort_ascending = sort_ascending
+
+        # Rebuild rows
         rows = []
         for book in books:
-            cells = [
-                ft.DataCell(ft.Text(book.title)),
-                ft.DataCell(ft.Text(str(book.year))),
-                ft.DataCell(ft.Text(book.author)),
-                ft.DataCell(ft.Text(book.genre)),
-                ft.DataCell(ft.Text(book.language)),
-            ]
+            cells = []
+            for key in visible_keys:
+                val = getattr(book, key)
+                cells.append(ft.DataCell(ft.Text(str(val))))
+
             rows.append(
                 ft.DataRow(
                     cells=cells,
