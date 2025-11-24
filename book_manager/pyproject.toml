@@ -1,0 +1,10 @@
+[project]
+name = "book-manager"
+version = "0.1.0"
+description = "A Flet-based Book Manager Application"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "flet",
+    "Faker"
+]
