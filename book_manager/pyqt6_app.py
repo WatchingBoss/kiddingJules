@@ -358,6 +358,20 @@ class BookManagerWindow(QMainWindow):
             book = dlg.get_data()
             self.save_and_update(book)
 
+    def sort_table(self, column_index):
+        # Determine order
+        current_order = self.table.horizontalHeader().sortIndicatorOrder()
+        if self.table.horizontalHeader().sortIndicatorSection() != column_index:
+            new_order = Qt.SortOrder.AscendingOrder
+        else:
+            new_order = Qt.SortOrder.DescendingOrder if current_order == Qt.SortOrder.AscendingOrder else Qt.SortOrder.AscendingOrder
+
+        self.table.sortItems(column_index, new_order)
+        self.table.horizontalHeader().setSortIndicator(column_index, new_order)
+
+        # Re-apply filters after sort because rows moved
+        self.apply_filters()
+
     def save_and_update(self, book):
         self.books.append(book)
         save_books(self.books, DATA_FILE)
