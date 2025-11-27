@@ -1,11 +1,11 @@
 import sys
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                                QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
                                QHeaderView, QCheckBox, QGroupBox, QComboBox, QTextEdit,
                                QDialog, QFormLayout, QDialogButtonBox, QAbstractItemView,
                                QRadioButton, QButtonGroup, QScrollArea, QFrame, QSizePolicy)
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIntValidator
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIntValidator
 
 from book import Book, generate_books, save_books, load_books
 
@@ -37,7 +37,7 @@ class AddBookDialog(QDialog):
 
         self.layout.addLayout(self.form_layout)
 
-        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         self.layout.addWidget(self.buttons)
@@ -60,7 +60,7 @@ class AddBookDialog(QDialog):
 class BookManagerWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Book Manager (PySide6)")
+        self.setWindowTitle("Book Manager (PyQt6)")
         self.resize(1200, 800)
 
         # Data Loading
@@ -357,20 +357,6 @@ class BookManagerWindow(QMainWindow):
         if dlg.exec():
             book = dlg.get_data()
             self.save_and_update(book)
-
-    def sort_table(self, column_index):
-        # Determine order
-        current_order = self.table.horizontalHeader().sortIndicatorOrder()
-        if self.table.horizontalHeader().sortIndicatorSection() != column_index:
-            new_order = Qt.SortOrder.AscendingOrder
-        else:
-            new_order = Qt.SortOrder.DescendingOrder if current_order == Qt.SortOrder.AscendingOrder else Qt.SortOrder.AscendingOrder
-
-        self.table.sortItems(column_index, new_order)
-        self.table.horizontalHeader().setSortIndicator(column_index, new_order)
-
-        # Re-apply filters after sort because rows moved
-        self.apply_filters()
 
     def save_and_update(self, book):
         self.books.append(book)

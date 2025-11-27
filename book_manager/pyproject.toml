@@ -8,5 +8,6 @@ dependencies = [
     "flet",
     "Faker",
     "Kivy",
-    "PySide6"
+    "PySide6",
+    "PyQt6"
 ]
