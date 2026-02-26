@@ -72,6 +72,9 @@ class BookManagerWindow(QMainWindow):
         self.unique_genres = sorted(list(set(b.genre for b in self.books)))
         self.unique_languages = sorted(list(set(b.language for b in self.books)))
 
+        self.current_sort_column = -1
+        self.current_sort_order = Qt.SortOrder.AscendingOrder
+
         # Central Widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -253,6 +256,8 @@ class BookManagerWindow(QMainWindow):
     def populate_table(self):
         self.table.setSortingEnabled(False)
         self.table.setRowCount(0)
+        self.current_sort_column = -1
+        self.current_sort_order = Qt.SortOrder.AscendingOrder
 
         for book in self.books:
             self.add_row(book)
@@ -360,14 +365,14 @@ class BookManagerWindow(QMainWindow):
 
     def sort_table(self, column_index):
         # Determine order
-        current_order = self.table.horizontalHeader().sortIndicatorOrder()
-        if self.table.horizontalHeader().sortIndicatorSection() != column_index:
-            new_order = Qt.SortOrder.AscendingOrder
+        if self.current_sort_column != column_index:
+            self.current_sort_order = Qt.SortOrder.AscendingOrder
+            self.current_sort_column = column_index
         else:
-            new_order = Qt.SortOrder.DescendingOrder if current_order == Qt.SortOrder.AscendingOrder else Qt.SortOrder.AscendingOrder
+            self.current_sort_order = Qt.SortOrder.DescendingOrder if self.current_sort_order == Qt.SortOrder.AscendingOrder else Qt.SortOrder.AscendingOrder
 
-        self.table.sortItems(column_index, new_order)
-        self.table.horizontalHeader().setSortIndicator(column_index, new_order)
+        self.table.sortItems(column_index, self.current_sort_order)
+        self.table.horizontalHeader().setSortIndicator(column_index, self.current_sort_order)
 
         # Re-apply filters after sort because rows moved
         self.apply_filters()
