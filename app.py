@@ -3,7 +3,8 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                                QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
                                QHeaderView, QCheckBox, QGroupBox, QComboBox, QTextEdit,
                                QDialog, QFormLayout, QDialogButtonBox, QAbstractItemView,
-                               QRadioButton, QButtonGroup, QScrollArea, QFrame, QSizePolicy)
+                               QRadioButton, QButtonGroup, QScrollArea, QFrame, QSizePolicy,
+                               QGridLayout)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
 
@@ -101,10 +102,9 @@ class BookManagerWindow(QMainWindow):
 
         # 2. Filters
         filter_group = QGroupBox("Filters")
-        filter_layout = QVBoxLayout()
+        filter_layout = QGridLayout()
 
         # Row 1: Title, Author
-        row1 = QHBoxLayout()
         self.filter_title = QLineEdit()
         self.filter_title.setPlaceholderText("Filter Title")
         self.filter_title.textChanged.connect(self.apply_filters)
@@ -113,14 +113,12 @@ class BookManagerWindow(QMainWindow):
         self.filter_author.setPlaceholderText("Filter Author")
         self.filter_author.textChanged.connect(self.apply_filters)
 
-        row1.addWidget(QLabel("Title:"))
-        row1.addWidget(self.filter_title)
-        row1.addWidget(QLabel("Author:"))
-        row1.addWidget(self.filter_author)
-        filter_layout.addLayout(row1)
+        filter_layout.addWidget(QLabel("Title:"), 0, 0)
+        filter_layout.addWidget(self.filter_title, 0, 1)
+        filter_layout.addWidget(QLabel("Author:"), 0, 2)
+        filter_layout.addWidget(self.filter_author, 0, 3)
 
         # Row 2: Year Range
-        row2 = QHBoxLayout()
         self.filter_year_min = QLineEdit()
         self.filter_year_min.setPlaceholderText("Min")
         self.filter_year_min.setValidator(QIntValidator())
@@ -131,14 +129,12 @@ class BookManagerWindow(QMainWindow):
         self.filter_year_max.setValidator(QIntValidator())
         self.filter_year_max.textChanged.connect(self.apply_filters)
 
-        row2.addWidget(QLabel("Year Min:"))
-        row2.addWidget(self.filter_year_min)
-        row2.addWidget(QLabel("Max:"))
-        row2.addWidget(self.filter_year_max)
-        filter_layout.addLayout(row2)
+        filter_layout.addWidget(QLabel("Year Min:"), 1, 0)
+        filter_layout.addWidget(self.filter_year_min, 1, 1)
+        filter_layout.addWidget(QLabel("Max:"), 1, 2)
+        filter_layout.addWidget(self.filter_year_max, 1, 3)
 
         # Row 3: Genre, Language
-        row3 = QHBoxLayout()
         self.filter_genre = QComboBox()
         self.filter_genre.addItem("All")
         self.filter_genre.addItems(self.unique_genres)
@@ -149,11 +145,10 @@ class BookManagerWindow(QMainWindow):
         self.filter_lang.addItems(self.unique_languages)
         self.filter_lang.currentTextChanged.connect(self.apply_filters)
 
-        row3.addWidget(QLabel("Genre:"))
-        row3.addWidget(self.filter_genre)
-        row3.addWidget(QLabel("Language:"))
-        row3.addWidget(self.filter_lang)
-        filter_layout.addLayout(row3)
+        filter_layout.addWidget(QLabel("Genre:"), 2, 0)
+        filter_layout.addWidget(self.filter_genre, 2, 1)
+        filter_layout.addWidget(QLabel("Language:"), 2, 2)
+        filter_layout.addWidget(self.filter_lang, 2, 3)
 
         filter_group.setLayout(filter_layout)
         left_layout.addWidget(filter_group)
