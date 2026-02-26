@@ -1,0 +1,10 @@
+[project]
+name = "learn_pyside6"
+version = "0.1.0"
+description = "We learn how to use pyside6 and create GUI app in python"
+readme = "README.md"
+requires-python = "==3.13.*"
+dependencies = [
+    "Faker",
+    "PySide6",
+]

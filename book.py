@@ -1,4 +1,5 @@
 import json
+import os
 import random
 from faker import Faker
 from typing import List, Dict
@@ -52,6 +53,9 @@ def generate_books(n=50) -> List[Book]:
     return books
 
 def save_books(books: List[Book], filename="books.json"):
+    if not os.path.isdir("data"):
+        os.mkdir(os.path.join(os.path.curdir, "data"))
+
     with open(filename, "w") as f:
         json.dump([b.to_dict() for b in books], f, indent=4)
 

@@ -1,15 +1,15 @@
 import sys
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                                QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
                                QHeaderView, QCheckBox, QGroupBox, QComboBox, QTextEdit,
                                QDialog, QFormLayout, QDialogButtonBox, QAbstractItemView,
                                QRadioButton, QButtonGroup, QScrollArea, QFrame, QSizePolicy)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIntValidator
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIntValidator
 
 from book import Book, generate_books, save_books, load_books
 
-DATA_FILE = "books.json"
+DATA_FILE = "data/books.json"
 
 class AddBookDialog(QDialog):
     def __init__(self, parent=None):
@@ -37,7 +37,7 @@ class AddBookDialog(QDialog):
 
         self.layout.addLayout(self.form_layout)
 
-        self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         self.layout.addWidget(self.buttons)
@@ -60,7 +60,7 @@ class AddBookDialog(QDialog):
 class BookManagerWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Book Manager (PyQt6)")
+        self.setWindowTitle("Book Manager (PySide6)")
         self.resize(1200, 800)
 
         # Data Loading
