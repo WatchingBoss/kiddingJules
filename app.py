@@ -369,7 +369,10 @@ class BookManagerWindow(QMainWindow):
             self.current_sort_order = Qt.SortOrder.AscendingOrder
             self.current_sort_column = column_index
         else:
-            self.current_sort_order = Qt.SortOrder.DescendingOrder if self.current_sort_order == Qt.SortOrder.AscendingOrder else Qt.SortOrder.AscendingOrder
+            if self.current_sort_order == Qt.SortOrder.AscendingOrder:
+                self.current_sort_order = Qt.SortOrder.DescendingOrder
+            else:
+                self.current_sort_order = Qt.SortOrder.AscendingOrder
 
         self.table.sortItems(column_index, self.current_sort_order)
         self.table.horizontalHeader().setSortIndicator(column_index, self.current_sort_order)
