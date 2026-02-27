@@ -4,13 +4,115 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                                QHeaderView, QCheckBox, QGroupBox, QComboBox, QTextEdit,
                                QDialog, QFormLayout, QDialogButtonBox, QAbstractItemView,
                                QRadioButton, QButtonGroup, QScrollArea, QFrame, QSizePolicy,
-                               QGridLayout)
-from PySide6.QtCore import Qt
+                               QGridLayout, QTableView)
+from PySide6.QtCore import Qt, QAbstractTableModel, QSortFilterProxyModel, QModelIndex
 from PySide6.QtGui import QIntValidator
 
 from book import Book, generate_books, save_books, load_books
 
 DATA_FILE = "data/books.json"
+
+class BookTableModel(QAbstractTableModel):
+    def __init__(self, books):
+        super().__init__()
+        self.books = books
+        self.columns = ["Title", "Year", "Author", "Genre", "Language"]
+
+    def rowCount(self, parent=QModelIndex()):
+        return len(self.books)
+
+    def columnCount(self, parent=QModelIndex()):
+        return len(self.columns)
+
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if not index.isValid():
+            return None
+
+        row = index.row()
+        col = index.column()
+        book = self.books[row]
+
+        if role == Qt.ItemDataRole.DisplayRole:
+            if col == 0: return book.title
+            if col == 1: return book.year
+            if col == 2: return book.author
+            if col == 3: return book.genre
+            if col == 4: return book.language
+
+        return None
+
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
+            return self.columns[section]
+        return None
+
+    def add_book(self, book):
+        self.beginInsertRows(QModelIndex(), len(self.books), len(self.books))
+        self.books.append(book)
+        self.endInsertRows()
+
+class BookFilterProxyModel(QSortFilterProxyModel):
+    def __init__(self):
+        super().__init__()
+        self.filter_title = ""
+        self.filter_author = ""
+        self.min_year = None
+        self.max_year = None
+        self.filter_genre = "All"
+        self.filter_language = "All"
+
+    def filterAcceptsRow(self, source_row, source_parent):
+        model = self.sourceModel()
+        idx_title = model.index(source_row, 0, source_parent)
+        idx_year = model.index(source_row, 1, source_parent)
+        idx_author = model.index(source_row, 2, source_parent)
+        idx_genre = model.index(source_row, 3, source_parent)
+        idx_lang = model.index(source_row, 4, source_parent)
+
+        title = model.data(idx_title, Qt.ItemDataRole.DisplayRole)
+        year = model.data(idx_year, Qt.ItemDataRole.DisplayRole)
+        author = model.data(idx_author, Qt.ItemDataRole.DisplayRole)
+        genre = model.data(idx_genre, Qt.ItemDataRole.DisplayRole)
+        lang = model.data(idx_lang, Qt.ItemDataRole.DisplayRole)
+
+        if self.filter_title and self.filter_title.lower() not in title.lower():
+            return False
+        if self.filter_author and self.filter_author.lower() not in author.lower():
+            return False
+        if self.min_year is not None and year < self.min_year:
+            return False
+        if self.max_year is not None and year > self.max_year:
+            return False
+        if self.filter_genre != "All" and genre != self.filter_genre:
+            return False
+        if self.filter_language != "All" and lang != self.filter_language:
+            return False
+
+        return True
+
+    def set_filter_title(self, text):
+        self.filter_title = text
+        self.invalidateFilter()
+
+    def set_filter_author(self, text):
+        self.filter_author = text
+        self.invalidateFilter()
+
+    def set_min_year(self, val):
+        self.min_year = val
+        self.invalidateFilter()
+
+    def set_max_year(self, val):
+        self.max_year = val
+        self.invalidateFilter()
+
+    def set_filter_genre(self, text):
+        self.filter_genre = text
+        self.invalidateFilter()
+
+    def set_filter_language(self, text):
+        self.filter_language = text
+        self.invalidateFilter()
 
 class AddBookDialog(QDialog):
     def __init__(self, parent=None):
@@ -107,11 +209,11 @@ class BookManagerWindow(QMainWindow):
         # Row 1: Title, Author
         self.filter_title = QLineEdit()
         self.filter_title.setPlaceholderText("Filter Title")
-        self.filter_title.textChanged.connect(self.apply_filters)
+        self.filter_title.textChanged.connect(self.update_filters)
 
         self.filter_author = QLineEdit()
         self.filter_author.setPlaceholderText("Filter Author")
-        self.filter_author.textChanged.connect(self.apply_filters)
+        self.filter_author.textChanged.connect(self.update_filters)
 
         filter_layout.addWidget(QLabel("Title:"), 0, 0)
         filter_layout.addWidget(self.filter_title, 0, 1)
@@ -122,12 +224,12 @@ class BookManagerWindow(QMainWindow):
         self.filter_year_min = QLineEdit()
         self.filter_year_min.setPlaceholderText("Min")
         self.filter_year_min.setValidator(QIntValidator())
-        self.filter_year_min.textChanged.connect(self.apply_filters)
+        self.filter_year_min.textChanged.connect(self.update_filters)
 
         self.filter_year_max = QLineEdit()
         self.filter_year_max.setPlaceholderText("Max")
         self.filter_year_max.setValidator(QIntValidator())
-        self.filter_year_max.textChanged.connect(self.apply_filters)
+        self.filter_year_max.textChanged.connect(self.update_filters)
 
         filter_layout.addWidget(QLabel("Year Min:"), 1, 0)
         filter_layout.addWidget(self.filter_year_min, 1, 1)
@@ -138,12 +240,12 @@ class BookManagerWindow(QMainWindow):
         self.filter_genre = QComboBox()
         self.filter_genre.addItem("All")
         self.filter_genre.addItems(self.unique_genres)
-        self.filter_genre.currentTextChanged.connect(self.apply_filters)
+        self.filter_genre.currentTextChanged.connect(self.update_filters)
 
         self.filter_lang = QComboBox()
         self.filter_lang.addItem("All")
         self.filter_lang.addItems(self.unique_languages)
-        self.filter_lang.currentTextChanged.connect(self.apply_filters)
+        self.filter_lang.currentTextChanged.connect(self.update_filters)
 
         filter_layout.addWidget(QLabel("Genre:"), 2, 0)
         filter_layout.addWidget(self.filter_genre, 2, 1)
@@ -154,16 +256,17 @@ class BookManagerWindow(QMainWindow):
         left_layout.addWidget(filter_group)
 
         # 3. Table
-        self.table = QTableWidget()
-        self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(columns)
+        self.model = BookTableModel(self.books)
+        self.proxy_model = BookFilterProxyModel()
+        self.proxy_model.setSourceModel(self.model)
+
+        self.table = QTableView()
+        self.table.setModel(self.proxy_model)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        # Disable automatic sorting to handle interaction with hiding rows manually
-        self.table.setSortingEnabled(False)
-        self.table.horizontalHeader().sectionClicked.connect(self.sort_table)
-        self.table.itemSelectionChanged.connect(self.on_selection_changed)
+        self.table.setSortingEnabled(True)
+        self.table.selectionModel().selectionChanged.connect(self.on_selection_changed)
         left_layout.addWidget(self.table)
 
         # --- Right Panel (Add & Desc) ---
@@ -245,81 +348,40 @@ class BookManagerWindow(QMainWindow):
         main_layout.addWidget(left_panel, 2)
         main_layout.addWidget(right_panel, 1)
 
-        # Initial Population
-        self.populate_table()
-
-    def populate_table(self):
-        self.table.setSortingEnabled(False)
-        self.table.setRowCount(0)
-        self.current_sort_column = -1
-        self.current_sort_order = Qt.SortOrder.AscendingOrder
-
-        for book in self.books:
-            self.add_row(book)
-
-        self.apply_filters()
-
-    def add_row(self, book):
-        row = self.table.rowCount()
-        self.table.insertRow(row)
-
-        # Items
-        # Title
-        item_title = QTableWidgetItem(book.title)
-        item_title.setData(Qt.ItemDataRole.UserRole, book) # Store book object in first item
-        self.table.setItem(row, 0, item_title)
-
-        # Year (Sortable as number)
-        item_year = QTableWidgetItem()
-        item_year.setData(Qt.ItemDataRole.DisplayRole, book.year)
-        self.table.setItem(row, 1, item_year)
-
-        # Others
-        self.table.setItem(row, 2, QTableWidgetItem(book.author))
-        self.table.setItem(row, 3, QTableWidgetItem(book.genre))
-        self.table.setItem(row, 4, QTableWidgetItem(book.language))
+        # Initial Population - Filters
+        self.update_filters()
 
     def toggle_column(self, index, checked):
         self.table.setColumnHidden(index, not checked)
 
-    def apply_filters(self):
-        title_q = self.filter_title.text().lower()
-        author_q = self.filter_author.text().lower()
+    def update_filters(self):
+        self.proxy_model.set_filter_title(self.filter_title.text())
+        self.proxy_model.set_filter_author(self.filter_author.text())
 
         try:
             min_y = int(self.filter_year_min.text())
         except ValueError:
             min_y = None
+        self.proxy_model.set_min_year(min_y)
 
         try:
             max_y = int(self.filter_year_max.text())
         except ValueError:
             max_y = None
+        self.proxy_model.set_max_year(max_y)
 
-        genre_q = self.filter_genre.currentText()
-        lang_q = self.filter_lang.currentText()
+        self.proxy_model.set_filter_genre(self.filter_genre.currentText())
+        self.proxy_model.set_filter_language(self.filter_lang.currentText())
 
-        for row in range(self.table.rowCount()):
-            book = self.table.item(row, 0).data(Qt.ItemDataRole.UserRole)
-
-            show = True
-            if title_q and title_q not in book.title.lower(): show = False
-            if show and author_q and author_q not in book.author.lower(): show = False
-            if show and min_y is not None and book.year < min_y: show = False
-            if show and max_y is not None and book.year > max_y: show = False
-            if show and genre_q != "All" and book.genre != genre_q: show = False
-            if show and lang_q != "All" and book.language != lang_q: show = False
-
-            self.table.setRowHidden(row, not show)
-
-    def on_selection_changed(self):
-        items = self.table.selectedItems()
-        if not items:
+    def on_selection_changed(self, selected, deselected):
+        indexes = self.table.selectionModel().selectedRows()
+        if not indexes:
             return
 
         # Get the row of the selected item
-        row = items[0].row()
-        book = self.table.item(row, 0).data(Qt.ItemDataRole.UserRole)
+        proxy_index = indexes[0]
+        source_index = self.proxy_model.mapToSource(proxy_index)
+        book = self.model.books[source_index.row()]
         self.desc_view.setText(book.description)
 
     def toggle_add_mode(self, button, checked):
@@ -358,26 +420,9 @@ class BookManagerWindow(QMainWindow):
             book = dlg.get_data()
             self.save_and_update(book)
 
-    def sort_table(self, column_index):
-        # Determine order
-        if self.current_sort_column != column_index:
-            self.current_sort_order = Qt.SortOrder.AscendingOrder
-            self.current_sort_column = column_index
-        else:
-            if self.current_sort_order == Qt.SortOrder.AscendingOrder:
-                self.current_sort_order = Qt.SortOrder.DescendingOrder
-            else:
-                self.current_sort_order = Qt.SortOrder.AscendingOrder
-
-        self.table.sortItems(column_index, self.current_sort_order)
-        self.table.horizontalHeader().setSortIndicator(column_index, self.current_sort_order)
-
-        # Re-apply filters after sort because rows moved
-        self.apply_filters()
-
     def save_and_update(self, book):
-        self.books.append(book)
-        save_books(self.books, DATA_FILE)
+        self.model.add_book(book)
+        save_books(self.model.books, DATA_FILE)
 
         # Update dropdowns
         if book.genre not in self.unique_genres:
@@ -389,10 +434,6 @@ class BookManagerWindow(QMainWindow):
             self.unique_languages.append(book.language)
             self.unique_languages.sort()
             self.filter_lang.addItem(book.language)
-
-        # Add to table
-        self.add_row(book)
-        self.apply_filters() # Re-apply filters to newly added row
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
