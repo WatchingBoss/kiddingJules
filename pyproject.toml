@@ -7,4 +7,5 @@ requires-python = "==3.13.*"
 dependencies = [
     "Faker",
     "PySide6",
+    "polars",
 ]

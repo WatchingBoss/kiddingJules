@@ -1,11 +1,12 @@
 import sys
+import polars as pl
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                                QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
                                QHeaderView, QCheckBox, QGroupBox, QComboBox, QTextEdit,
                                QDialog, QFormLayout, QDialogButtonBox, QAbstractItemView,
                                QRadioButton, QButtonGroup, QScrollArea, QFrame, QSizePolicy,
                                QGridLayout, QTableView)
-from PySide6.QtCore import Qt, QAbstractTableModel, QSortFilterProxyModel, QModelIndex, QTimer
+from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QTimer
 from PySide6.QtGui import QIntValidator
 
 from book import Book, generate_books, save_books, load_books
@@ -15,11 +16,26 @@ DATA_FILE = "data/books.json"
 class BookTableModel(QAbstractTableModel):
     def __init__(self, books):
         super().__init__()
-        self.books = books
+        # Define schema to handle empty list correctly
+        self.schema = {
+            "title": pl.Utf8,
+            "year": pl.Int64,
+            "author": pl.Utf8,
+            "genre": pl.Utf8,
+            "language": pl.Utf8,
+            "description": pl.Utf8
+        }
+        data = [b.to_dict() for b in books] if books else []
+        self.full_df = pl.DataFrame(data, schema=self.schema)
+        self.display_df = self.full_df.clone()
         self.columns = ["Title", "Year", "Author", "Genre", "Language"]
+        self.col_map = {0: "title", 1: "year", 2: "author", 3: "genre", 4: "language"}
+        
+        self.current_sort_col = -1
+        self.current_sort_order = Qt.SortOrder.AscendingOrder
 
     def rowCount(self, parent=QModelIndex()):
-        return len(self.books)
+        return self.display_df.height
 
     def columnCount(self, parent=QModelIndex()):
         return len(self.columns)
@@ -28,16 +44,10 @@ class BookTableModel(QAbstractTableModel):
         if not index.isValid():
             return None
 
-        row = index.row()
-        col = index.column()
-        book = self.books[row]
-
         if role == Qt.ItemDataRole.DisplayRole:
-            if col == 0: return book.title
-            if col == 1: return book.year
-            if col == 2: return book.author
-            if col == 3: return book.genre
-            if col == 4: return book.language
+            col_name = self.col_map.get(index.column())
+            if col_name:
+                return str(self.display_df.item(index.row(), col_name))
 
         return None
 
@@ -46,64 +56,66 @@ class BookTableModel(QAbstractTableModel):
             return self.columns[section]
         return None
 
+    def sort(self, column, order):
+        self.current_sort_col = column
+        self.current_sort_order = order
+        self._apply_sort()
+
+    def _apply_sort(self):
+        col_name = self.col_map.get(self.current_sort_col)
+        if not col_name:
+            return
+            
+        self.beginResetModel()
+        descending = (self.current_sort_order == Qt.SortOrder.DescendingOrder)
+        self.display_df = self.display_df.sort(col_name, descending=descending)
+        self.endResetModel()
+
     def add_book(self, book):
-        self.beginInsertRows(QModelIndex(), len(self.books), len(self.books))
-        self.books.append(book)
-        self.endInsertRows()
+        # We append to full_df. The view update happens when filters are reapplied/refreshed.
+        # Ensure schema matches to avoid type issues on append
+        new_row = pl.DataFrame([book.to_dict()], schema=self.schema)
+        # Use simple concat (creating new DF) as Polars is immutable
+        try:
+            self.full_df = pl.concat([self.full_df, new_row], how="vertical")
+        except Exception as e:
+            # Fallback for empty df case if schema differs slightly (shouldn't happen with explicit schema)
+             self.full_df = pl.concat([self.full_df, new_row], how="vertical_relaxed")
+        
+        # We don't automatically update display_df here; the main window calls update_filters()
+        
+    def apply_filters(self, title, author, min_year, max_year, genre, lang):
+        # We don't call beginResetModel here because _apply_sort will do it.
+        # But we need to update display_df first.
+        
+        expr = True
+        
+        if title:
+            expr &= pl.col("title").str.to_lowercase().str.contains(title.lower())
+        if author:
+            expr &= pl.col("author").str.to_lowercase().str.contains(author.lower())
+        if min_year is not None:
+            expr &= pl.col("year") >= min_year
+        if max_year is not None:
+            expr &= pl.col("year") <= max_year
+        if genre and genre != "All":
+            expr &= pl.col("genre") == genre
+        if lang and lang != "All":
+            expr &= pl.col("language") == lang
+            
+        if isinstance(expr, bool) and expr is True:
+            self.display_df = self.full_df
+        else:
+            self.display_df = self.full_df.filter(expr)
+            
+        # Re-apply sort if active
+        if self.current_sort_col != -1:
+            self._apply_sort()
+        else:
+            # If no sort, we still need to notify views of change
+            self.beginResetModel()
+            self.endResetModel()
 
-class BookFilterProxyModel(QSortFilterProxyModel):
-    def __init__(self):
-        super().__init__()
-        self.filter_title = ""
-        self.filter_author = ""
-        self.min_year = None
-        self.max_year = None
-        self.filter_genre = "All"
-        self.filter_language = "All"
-
-    def filterAcceptsRow(self, source_row, source_parent):
-        # Optimization: Access the underlying data directly to avoid QVariant overhead
-        model = self.sourceModel()
-        book = model.books[source_row]
-
-        if self.filter_title and self.filter_title.lower() not in book.title.lower():
-            return False
-        if self.filter_author and self.filter_author.lower() not in book.author.lower():
-            return False
-        if self.min_year is not None and book.year < self.min_year:
-            return False
-        if self.max_year is not None and book.year > self.max_year:
-            return False
-        if self.filter_genre != "All" and book.genre != self.filter_genre:
-            return False
-        if self.filter_language != "All" and book.language != self.filter_language:
-            return False
-
-        return True
-
-    def set_filter_title(self, text):
-        self.filter_title = text
-        self.invalidateFilter()
-
-    def set_filter_author(self, text):
-        self.filter_author = text
-        self.invalidateFilter()
-
-    def set_min_year(self, val):
-        self.min_year = val
-        self.invalidateFilter()
-
-    def set_max_year(self, val):
-        self.max_year = val
-        self.invalidateFilter()
-
-    def set_filter_genre(self, text):
-        self.filter_genre = text
-        self.invalidateFilter()
-
-    def set_filter_language(self, text):
-        self.filter_language = text
-        self.invalidateFilter()
 
 class AddBookDialog(QDialog):
     def __init__(self, parent=None):
@@ -254,11 +266,10 @@ class BookManagerWindow(QMainWindow):
 
         # 3. Table
         self.model = BookTableModel(self.books)
-        self.proxy_model = BookFilterProxyModel()
-        self.proxy_model.setSourceModel(self.model)
-
+        # Replaced ProxyModel with direct Polars filtering in TableModel
+        
         self.table = QTableView()
-        self.table.setModel(self.proxy_model)
+        self.table.setModel(self.model)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
@@ -352,23 +363,23 @@ class BookManagerWindow(QMainWindow):
         self.table.setColumnHidden(index, not checked)
 
     def update_filters(self):
-        self.proxy_model.set_filter_title(self.filter_title.text())
-        self.proxy_model.set_filter_author(self.filter_author.text())
-
+        title = self.filter_title.text()
+        author = self.filter_author.text()
+        
         try:
             min_y = int(self.filter_year_min.text())
         except ValueError:
             min_y = None
-        self.proxy_model.set_min_year(min_y)
-
+            
         try:
             max_y = int(self.filter_year_max.text())
         except ValueError:
             max_y = None
-        self.proxy_model.set_max_year(max_y)
-
-        self.proxy_model.set_filter_genre(self.filter_genre.currentText())
-        self.proxy_model.set_filter_language(self.filter_lang.currentText())
+            
+        genre = self.filter_genre.currentText()
+        lang = self.filter_lang.currentText()
+        
+        self.model.apply_filters(title, author, min_y, max_y, genre, lang)
 
     def on_selection_changed(self, selected, deselected):
         indexes = self.table.selectionModel().selectedRows()
@@ -376,10 +387,10 @@ class BookManagerWindow(QMainWindow):
             return
 
         # Get the row of the selected item
-        proxy_index = indexes[0]
-        source_index = self.proxy_model.mapToSource(proxy_index)
-        book = self.model.books[source_index.row()]
-        self.desc_view.setText(book.description)
+        index = indexes[0]
+        # Retrieve description directly from the display dataframe
+        desc = self.model.display_df.item(index.row(), "description")
+        self.desc_view.setText(desc)
 
     def toggle_add_mode(self, button, checked):
         if not checked: return
@@ -419,7 +430,22 @@ class BookManagerWindow(QMainWindow):
 
     def save_and_update(self, book):
         self.model.add_book(book)
-        save_books(self.model.books, DATA_FILE)
+        # Update persistence if needed, though here we'd need to reconstruct the full list or keep it synced.
+        # Since we converted to Polars, self.model.books is no longer the source of truth if we modify the DF?
+        # Actually BookTableModel.__init__ took `books`. But we didn't keep `self.books` in the model!
+        # We need to ensure persistence works. 
+        # Ideally we'd persist the full dataframe back to list of dicts.
+        
+        # Let's reconstruct the books list from the full dataframe to save it
+        # Or simpler: just append to the original list if we kept it? 
+        # But we replaced `self.books` with `self.full_df` in the model.
+        # The Window created the list `self.books` initially. 
+        # Let's append to that local list and save it.
+        self.books.append(book)
+        save_books(self.books, DATA_FILE)
+        
+        # Refresh the view to show the new book (if it matches filters)
+        self.update_filters()
 
         # Update dropdowns
         if book.genre not in self.unique_genres:
