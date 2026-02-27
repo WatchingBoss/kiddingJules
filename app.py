@@ -11,10 +11,10 @@ from PySide6.QtGui import QIntValidator
 
 from book import Book, generate_books, save_books, load_books
 
-DATA_FILE = "data/books.json"
+DATA_FILE = "data/books.parquet"
 
 class BookTableModel(QAbstractTableModel):
-    def __init__(self, books):
+    def __init__(self, df: pl.DataFrame):
         super().__init__()
         # Define schema to handle empty list correctly
         self.schema = {
@@ -25,14 +25,15 @@ class BookTableModel(QAbstractTableModel):
             "language": pl.Utf8,
             "description": pl.Utf8
         }
-        data = [b.to_dict() for b in books] if books else []
-        self.full_df = pl.DataFrame(data, schema=self.schema)
+        self.full_df = df
         self.display_df = self.full_df.clone()
         self.columns = ["Title", "Year", "Author", "Genre", "Language"]
         self.col_map = {0: "title", 1: "year", 2: "author", 3: "genre", 4: "language"}
         
         self.current_sort_col = -1
         self.current_sort_order = Qt.SortOrder.AscendingOrder
+
+        self._hot_buffer = []
 
     def rowCount(self, parent=QModelIndex()):
         return self.display_df.height
@@ -62,6 +63,7 @@ class BookTableModel(QAbstractTableModel):
         self._apply_sort()
 
     def _apply_sort(self):
+        self.flush_buffer()
         col_name = self.col_map.get(self.current_sort_col)
         if not col_name:
             return
@@ -72,19 +74,22 @@ class BookTableModel(QAbstractTableModel):
         self.endResetModel()
 
     def add_book(self, book):
-        # We append to full_df. The view update happens when filters are reapplied/refreshed.
-        # Ensure schema matches to avoid type issues on append
-        new_row = pl.DataFrame([book.to_dict()], schema=self.schema)
-        # Use simple concat (creating new DF) as Polars is immutable
+        self._hot_buffer.append(book.to_dict())
+
+    def flush_buffer(self):
+        if not self._hot_buffer:
+            return
+
+        new_df = pl.DataFrame(self._hot_buffer, schema=self.schema)
         try:
-            self.full_df = pl.concat([self.full_df, new_row], how="vertical")
-        except Exception as e:
-            # Fallback for empty df case if schema differs slightly (shouldn't happen with explicit schema)
-             self.full_df = pl.concat([self.full_df, new_row], how="vertical_relaxed")
+            self.full_df = pl.concat([self.full_df, new_df], how="vertical")
+        except Exception:
+            self.full_df = pl.concat([self.full_df, new_df], how="vertical_relaxed")
         
-        # We don't automatically update display_df here; the main window calls update_filters()
-        
+        self._hot_buffer = []
+
     def apply_filters(self, title, author, min_year, max_year, genre, lang):
+        self.flush_buffer()
         # We don't call beginResetModel here because _apply_sort will do it.
         # But we need to update display_df first.
         
@@ -170,13 +175,39 @@ class BookManagerWindow(QMainWindow):
         self.resize(1200, 800)
 
         # Data Loading
-        self.books = load_books(DATA_FILE)
-        if not self.books:
-            self.books = generate_books(50_000)
-            save_books(self.books, DATA_FILE)
+        try:
+            df = load_books(DATA_FILE)
+        except Exception:
+             # Fallback if load fails (though load_books handles missing files, it might raise on corrupted ones)
+             df = pl.DataFrame([], schema={
+                "title": pl.Utf8,
+                "year": pl.Int64,
+                "author": pl.Utf8,
+                "genre": pl.Utf8,
+                "language": pl.Utf8,
+                "description": pl.Utf8
+            })
 
-        self.unique_genres = sorted(list(set(b.genre for b in self.books)))
-        self.unique_languages = sorted(list(set(b.language for b in self.books)))
+        if df.is_empty():
+             # Generate mock data
+             books = generate_books(50_000)
+             # Convert to DataFrame
+             data = [b.to_dict() for b in books]
+             df = pl.DataFrame(data, schema={
+                "title": pl.Utf8,
+                "year": pl.Int64,
+                "author": pl.Utf8,
+                "genre": pl.Utf8,
+                "language": pl.Utf8,
+                "description": pl.Utf8
+            })
+             save_books(df, DATA_FILE)
+
+        # Initialize Model
+        self.model = BookTableModel(df)
+
+        self.unique_genres = sorted(df["genre"].unique().to_list())
+        self.unique_languages = sorted(df["language"].unique().to_list())
 
         self.current_sort_column = -1
         self.current_sort_order = Qt.SortOrder.AscendingOrder
@@ -265,8 +296,7 @@ class BookManagerWindow(QMainWindow):
         left_layout.addWidget(filter_group)
 
         # 3. Table
-        self.model = BookTableModel(self.books)
-        # Replaced ProxyModel with direct Polars filtering in TableModel
+        # Model initialized earlier
         
         self.table = QTableView()
         self.table.setModel(self.model)
@@ -430,19 +460,8 @@ class BookManagerWindow(QMainWindow):
 
     def save_and_update(self, book):
         self.model.add_book(book)
-        # Update persistence if needed, though here we'd need to reconstruct the full list or keep it synced.
-        # Since we converted to Polars, self.model.books is no longer the source of truth if we modify the DF?
-        # Actually BookTableModel.__init__ took `books`. But we didn't keep `self.books` in the model!
-        # We need to ensure persistence works. 
-        # Ideally we'd persist the full dataframe back to list of dicts.
-        
-        # Let's reconstruct the books list from the full dataframe to save it
-        # Or simpler: just append to the original list if we kept it? 
-        # But we replaced `self.books` with `self.full_df` in the model.
-        # The Window created the list `self.books` initially. 
-        # Let's append to that local list and save it.
-        self.books.append(book)
-        save_books(self.books, DATA_FILE)
+        self.model.flush_buffer()
+        save_books(self.model.full_df, DATA_FILE)
         
         # Refresh the view to show the new book (if it matches filters)
         self.update_filters()
