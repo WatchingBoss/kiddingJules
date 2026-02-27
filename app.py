@@ -169,7 +169,7 @@ class BookManagerWindow(QMainWindow):
         # Data Loading
         self.books = load_books(DATA_FILE)
         if not self.books:
-            self.books = generate_books(50)
+            self.books = generate_books(50_000)
             save_books(self.books, DATA_FILE)
 
         self.unique_genres = sorted(list(set(b.genre for b in self.books)))
