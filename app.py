@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                                QDialog, QFormLayout, QDialogButtonBox, QAbstractItemView,
                                QRadioButton, QButtonGroup, QScrollArea, QFrame, QSizePolicy,
                                QGridLayout, QTableView)
-from PySide6.QtCore import Qt, QAbstractTableModel, QSortFilterProxyModel, QModelIndex
+from PySide6.QtCore import Qt, QAbstractTableModel, QSortFilterProxyModel, QModelIndex, QTimer
 from PySide6.QtGui import QIntValidator
 
 from book import Book, generate_books, save_books, load_books
@@ -62,30 +62,21 @@ class BookFilterProxyModel(QSortFilterProxyModel):
         self.filter_language = "All"
 
     def filterAcceptsRow(self, source_row, source_parent):
+        # Optimization: Access the underlying data directly to avoid QVariant overhead
         model = self.sourceModel()
-        idx_title = model.index(source_row, 0, source_parent)
-        idx_year = model.index(source_row, 1, source_parent)
-        idx_author = model.index(source_row, 2, source_parent)
-        idx_genre = model.index(source_row, 3, source_parent)
-        idx_lang = model.index(source_row, 4, source_parent)
+        book = model.books[source_row]
 
-        title = model.data(idx_title, Qt.ItemDataRole.DisplayRole)
-        year = model.data(idx_year, Qt.ItemDataRole.DisplayRole)
-        author = model.data(idx_author, Qt.ItemDataRole.DisplayRole)
-        genre = model.data(idx_genre, Qt.ItemDataRole.DisplayRole)
-        lang = model.data(idx_lang, Qt.ItemDataRole.DisplayRole)
-
-        if self.filter_title and self.filter_title.lower() not in title.lower():
+        if self.filter_title and self.filter_title.lower() not in book.title.lower():
             return False
-        if self.filter_author and self.filter_author.lower() not in author.lower():
+        if self.filter_author and self.filter_author.lower() not in book.author.lower():
             return False
-        if self.min_year is not None and year < self.min_year:
+        if self.min_year is not None and book.year < self.min_year:
             return False
-        if self.max_year is not None and year > self.max_year:
+        if self.max_year is not None and book.year > self.max_year:
             return False
-        if self.filter_genre != "All" and genre != self.filter_genre:
+        if self.filter_genre != "All" and book.genre != self.filter_genre:
             return False
-        if self.filter_language != "All" and lang != self.filter_language:
+        if self.filter_language != "All" and book.language != self.filter_language:
             return False
 
         return True
@@ -178,6 +169,12 @@ class BookManagerWindow(QMainWindow):
         self.current_sort_column = -1
         self.current_sort_order = Qt.SortOrder.AscendingOrder
 
+        # Filter Debouncing Timer
+        self.debounce_timer = QTimer()
+        self.debounce_timer.setSingleShot(True)
+        self.debounce_timer.setInterval(300)
+        self.debounce_timer.timeout.connect(self.update_filters)
+
         # Central Widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -209,11 +206,11 @@ class BookManagerWindow(QMainWindow):
         # Row 1: Title, Author
         self.filter_title = QLineEdit()
         self.filter_title.setPlaceholderText("Filter Title")
-        self.filter_title.textChanged.connect(self.update_filters)
+        self.filter_title.textChanged.connect(lambda: self.debounce_timer.start())
 
         self.filter_author = QLineEdit()
         self.filter_author.setPlaceholderText("Filter Author")
-        self.filter_author.textChanged.connect(self.update_filters)
+        self.filter_author.textChanged.connect(lambda: self.debounce_timer.start())
 
         filter_layout.addWidget(QLabel("Title:"), 0, 0)
         filter_layout.addWidget(self.filter_title, 0, 1)
@@ -224,12 +221,12 @@ class BookManagerWindow(QMainWindow):
         self.filter_year_min = QLineEdit()
         self.filter_year_min.setPlaceholderText("Min")
         self.filter_year_min.setValidator(QIntValidator())
-        self.filter_year_min.textChanged.connect(self.update_filters)
+        self.filter_year_min.textChanged.connect(lambda: self.debounce_timer.start())
 
         self.filter_year_max = QLineEdit()
         self.filter_year_max.setPlaceholderText("Max")
         self.filter_year_max.setValidator(QIntValidator())
-        self.filter_year_max.textChanged.connect(self.update_filters)
+        self.filter_year_max.textChanged.connect(lambda: self.debounce_timer.start())
 
         filter_layout.addWidget(QLabel("Year Min:"), 1, 0)
         filter_layout.addWidget(self.filter_year_min, 1, 1)
