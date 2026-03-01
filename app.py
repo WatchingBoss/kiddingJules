@@ -324,9 +324,14 @@ class BookManagerWindow(QMainWindow):
         filter_group.setLayout(filter_layout)
         left_layout.addWidget(filter_group)
 
-        # 3. Table
+        # 3. Table & Database Stats
         # Model initialized earlier
         
+        # Total books label
+        self.total_books_label = QLabel()
+        self.total_books_label.setStyleSheet("font-weight: bold;")
+        left_layout.addWidget(self.total_books_label)
+
         self.table = QTableView()
         self.table.setModel(self.model)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -434,6 +439,12 @@ class BookManagerWindow(QMainWindow):
         self.rabbitmq_worker.book_received.connect(self.handle_incoming_book)
         self.rabbitmq_worker.start()
 
+        self.update_total_books_label()
+
+    def update_total_books_label(self):
+        total_count = self.model.full_df.height + len(self.model._hot_buffer)
+        self.total_books_label.setText(f"Total Books in Database: {total_count}")
+
     def toggle_column(self, index, checked):
         self.table.setColumnHidden(index, not checked)
 
@@ -507,6 +518,7 @@ class BookManagerWindow(QMainWindow):
         book = Book.from_dict(book_data)
         self.model.add_book(book)
         self.log_view.appendPlainText(f"[+] Received: {book.title} ({book.author})")
+        self.update_total_books_label()
 
     def save_and_update(self, book):
         self.model.add_book(book)
@@ -515,6 +527,7 @@ class BookManagerWindow(QMainWindow):
         
         # Refresh the view to show the new book (if it matches filters)
         self.update_filters()
+        self.update_total_books_label()
 
         # Update dropdowns
         if book.genre not in self.unique_genres:
