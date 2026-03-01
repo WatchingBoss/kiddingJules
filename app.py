@@ -1,17 +1,46 @@
 import sys
+import json
 import polars as pl
+import pika
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                                QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
                                QHeaderView, QCheckBox, QGroupBox, QComboBox, QTextEdit,
                                QDialog, QFormLayout, QDialogButtonBox, QAbstractItemView,
                                QRadioButton, QButtonGroup, QScrollArea, QFrame, QSizePolicy,
-                               QGridLayout, QTableView)
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QTimer
+                               QGridLayout, QTableView, QPlainTextEdit)
+from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QTimer, QThread, Signal
 from PySide6.QtGui import QIntValidator
 
 from book import Book, generate_books, save_books, load_books
 
 DATA_FILE = "data/books.parquet"
+
+class RabbitMQWorker(QThread):
+    book_received = Signal(dict)
+
+    def run(self):
+        try:
+            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+            channel = connection.channel()
+
+            # Ensure durable=True matches the modern RabbitMQ standards
+            channel.queue_declare(queue='books_queue', durable=True)
+
+            def callback(ch, method, properties, body):
+                try:
+                    book_data = json.loads(body)
+                    self.book_received.emit(book_data)
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON from RabbitMQ: {e}")
+
+            channel.basic_consume(queue='books_queue', on_message_callback=callback, auto_ack=True)
+            channel.start_consuming()
+
+        except pika.exceptions.AMQPConnectionError as e:
+            print(f"RabbitMQ connection failed: {e}")
+            # Could implement retry logic or emit an error signal here
+        except Exception as e:
+            print(f"RabbitMQ worker error: {e}")
 
 class BookTableModel(QAbstractTableModel):
     def __init__(self, df: pl.DataFrame):
@@ -382,12 +411,28 @@ class BookManagerWindow(QMainWindow):
         desc_group.setLayout(desc_layout)
         right_layout.addWidget(desc_group)
 
+        # 6. Live Feed Area
+        live_feed_group = QGroupBox("Live Feed")
+        live_feed_layout = QVBoxLayout()
+        self.log_view = QPlainTextEdit()
+        self.log_view.setReadOnly(True)
+        # CRITICAL: Prevent memory leak from endless logging
+        self.log_view.setMaximumBlockCount(1000)
+        live_feed_layout.addWidget(self.log_view)
+        live_feed_group.setLayout(live_feed_layout)
+        right_layout.addWidget(live_feed_group)
+
         # Layout Assembly
         main_layout.addWidget(left_panel, 2)
         main_layout.addWidget(right_panel, 1)
 
         # Initial Population - Filters
         self.update_filters()
+
+        # Connect RabbitMQ Worker
+        self.rabbitmq_worker = RabbitMQWorker()
+        self.rabbitmq_worker.book_received.connect(self.handle_incoming_book)
+        self.rabbitmq_worker.start()
 
     def toggle_column(self, index, checked):
         self.table.setColumnHidden(index, not checked)
@@ -457,6 +502,11 @@ class BookManagerWindow(QMainWindow):
         if dlg.exec():
             book = dlg.get_data()
             self.save_and_update(book)
+
+    def handle_incoming_book(self, book_data):
+        book = Book.from_dict(book_data)
+        self.model.add_book(book)
+        self.log_view.appendPlainText(f"[+] Received: {book.title} ({book.author})")
 
     def save_and_update(self, book):
         self.model.add_book(book)

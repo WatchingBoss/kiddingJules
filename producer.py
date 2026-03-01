@@ -30,9 +30,9 @@ def main():
 
     # 2. Declare Queue
     # Ensure the queue exists before publishing to it.
-    # durable=False means messages will be lost if RabbitMQ restarts.
+    # durable=True means messages survive RabbitMQ restarts.
     queue_name = 'books_queue'
-    channel.queue_declare(queue=queue_name, durable=False)
+    channel.queue_declare(queue=queue_name, durable=True)
 
     print(f" [*] Waiting to publish messages to '{queue_name}'. To exit press CTRL+C")
 
