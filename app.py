@@ -1,7 +1,9 @@
+import os
 import sys
 import json
 import polars as pl
 import pika
+from dotenv import load_dotenv
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                                QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
                                QHeaderView, QCheckBox, QGroupBox, QComboBox, QTextEdit,
@@ -13,14 +15,17 @@ from PySide6.QtGui import QIntValidator
 
 from book import Book, generate_books, save_books, load_books
 
-DATA_FILE = "data/books.parquet"
+load_dotenv()
+
+DATA_FILE = os.getenv("DATA_FILE_PATH", "data/books.parquet")
 
 class RabbitMQWorker(QThread):
     book_received = Signal(dict)
 
     def run(self):
         try:
-            self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+            host = os.getenv("RABBITMQ_HOST", "localhost")
+            self.connection = pika.BlockingConnection(pika.ConnectionParameters(host))
             self.channel = self.connection.channel()
 
             # Ensure durable=True matches the modern RabbitMQ standards
@@ -44,7 +49,10 @@ class RabbitMQWorker(QThread):
 
     def stop(self):
         if hasattr(self, 'connection') and self.connection.is_open:
-            self.connection.add_callback_threadsafe(self.channel.stop_consuming)
+            def close_connection():
+                self.channel.stop_consuming()
+                self.connection.close()
+            self.connection.add_callback_threadsafe(close_connection)
         self.wait()
 
 class BookTableModel(QAbstractTableModel):
@@ -109,6 +117,9 @@ class BookTableModel(QAbstractTableModel):
 
     def add_book(self, book):
         self._hot_buffer.append(book.to_dict())
+
+    def has_new_data(self):
+        return len(self._hot_buffer) > 0
 
     def flush_buffer(self):
         if not self._hot_buffer:
@@ -449,7 +460,7 @@ class BookManagerWindow(QMainWindow):
         # UI Update Timer (500ms) - Heartbeat for live UI refreshes
         self.ui_timer = QTimer()
         self.ui_timer.setInterval(500)
-        self.ui_timer.timeout.connect(self.update_filters)
+        self.ui_timer.timeout.connect(self.check_and_update_feed)
         self.ui_timer.start()
 
         # Save Timer (60000ms) - Heartbeat for auto saving
@@ -531,11 +542,15 @@ class BookManagerWindow(QMainWindow):
             book = dlg.get_data()
             self.save_and_update(book)
 
+    def check_and_update_feed(self):
+        if self.model.has_new_data():
+            self.update_filters()
+            self.update_total_books_label()
+
     def handle_incoming_book(self, book_data):
         book = Book.from_dict(book_data)
         self.model.add_book(book)
         self.log_view.appendPlainText(f"[+] Received: {book.title} ({book.author})")
-        self.update_total_books_label()
 
     def auto_save(self):
         self.model.flush_buffer()
