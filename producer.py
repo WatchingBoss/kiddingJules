@@ -2,9 +2,9 @@ import json
 import random
 import time
 import sys
-from dotenv import load_dotenv
+import os
+from config import RABBITMQ_HOST as rmq_host
 
-load_dotenv()
 
 try:
     import pika
@@ -22,7 +22,6 @@ def main():
     languages = ["English", "Spanish", "French", "German", "Italian", "Chinese", "Japanese"]
 
     # 1. Establish Connection
-    rmq_host = os.getenv("RABBITMQ_HOST", "localhost")
     print(f"Connecting to RabbitMQ at {rmq_host}...")
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters(rmq_host))

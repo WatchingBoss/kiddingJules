@@ -3,7 +3,6 @@ import sys
 import json
 import polars as pl
 import pika
-from dotenv import load_dotenv
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                                QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
                                QHeaderView, QCheckBox, QGroupBox, QComboBox, QTextEdit,
@@ -13,18 +12,19 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QTimer, QThread, Signal
 from PySide6.QtGui import QIntValidator
 
+from config import (RABBITMQ_HOST as rmq_host,
+                    DATA_FILE_PATH as f_path,
+                    AMOUNT_GENERATING_BOOKS)
+
 from book import Book, generate_books, save_books, load_books
 
-load_dotenv()
-
-DATA_FILE = os.getenv("DATA_FILE_PATH", "data/books.parquet")
 
 class RabbitMQWorker(QThread):
     book_received = Signal(dict)
 
     def run(self):
         try:
-            host = os.getenv("RABBITMQ_HOST", "localhost")
+            host = rmq_host
             self.connection = pika.BlockingConnection(pika.ConnectionParameters(host))
             self.channel = self.connection.channel()
 
@@ -221,7 +221,7 @@ class BookManagerWindow(QMainWindow):
 
         # Data Loading
         try:
-            df = load_books(DATA_FILE)
+            df = load_books(f_path)
         except Exception:
              # Fallback if load fails (though load_books handles missing files, it might raise on corrupted ones)
              df = pl.DataFrame([], schema={
@@ -235,7 +235,7 @@ class BookManagerWindow(QMainWindow):
 
         if df.is_empty():
              # Generate mock data
-             books = generate_books(50_000)
+             books = generate_books(AMOUNT_GENERATING_BOOKS)
              # Convert to DataFrame
              data = [b.to_dict() for b in books]
              df = pl.DataFrame(data, schema={
@@ -246,7 +246,7 @@ class BookManagerWindow(QMainWindow):
                 "language": pl.Utf8,
                 "description": pl.Utf8
             })
-             save_books(df, DATA_FILE)
+             save_books(df, f_path)
 
         # Initialize Model
         self.model = BookTableModel(df)
@@ -554,7 +554,7 @@ class BookManagerWindow(QMainWindow):
 
     def auto_save(self):
         self.model.flush_buffer()
-        save_books(self.model.full_df, DATA_FILE)
+        save_books(self.model.full_df, f_path)
 
     def save_and_update(self, book):
         self.model.add_book(book)

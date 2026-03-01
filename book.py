@@ -3,9 +3,8 @@ import random
 from faker import Faker
 from typing import List, Dict
 import polars as pl
-from dotenv import load_dotenv
+from config import DATA_FILE_PATH as f_path
 
-load_dotenv()
 
 BOOK_SCHEMA = {
     "title": pl.Utf8,
@@ -64,18 +63,14 @@ def generate_books(n=50) -> List[Book]:
         books.append(book)
     return books
 
-def save_books(df: pl.DataFrame, filename=None):
-    if filename is None:
-        filename = os.getenv("DATA_FILE_PATH", "data/books.parquet")
+def save_books(df: pl.DataFrame, filename=f_path):
     directory = os.path.dirname(filename)
     if directory and not os.path.exists(directory):
         os.makedirs(directory, exist_ok=True)
 
     df.write_parquet(filename)
 
-def load_books(filename=None) -> pl.DataFrame:
-    if filename is None:
-        filename = os.getenv("DATA_FILE_PATH", "data/books.parquet")
+def load_books(filename=f_path) -> pl.DataFrame:
     if not os.path.exists(filename):
         return pl.DataFrame([], schema=BOOK_SCHEMA)
 
