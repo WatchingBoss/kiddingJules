@@ -1,8 +1,20 @@
-import json
 import os
 import random
 from faker import Faker
 from typing import List, Dict
+import polars as pl
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BOOK_SCHEMA = {
+    "title": pl.Utf8,
+    "year": pl.Int64,
+    "author": pl.Utf8,
+    "genre": pl.Utf8,
+    "language": pl.Utf8,
+    "description": pl.Utf8
+}
 
 class Book:
     def __init__(self, title, year, author, genre, language, description):
@@ -52,17 +64,22 @@ def generate_books(n=50) -> List[Book]:
         books.append(book)
     return books
 
-def save_books(books: List[Book], filename="books.json"):
-    if not os.path.isdir("data"):
-        os.mkdir(os.path.join(os.path.curdir, "data"))
+def save_books(df: pl.DataFrame, filename=None):
+    if filename is None:
+        filename = os.getenv("DATA_FILE_PATH", "data/books.parquet")
+    directory = os.path.dirname(filename)
+    if directory and not os.path.exists(directory):
+        os.makedirs(directory, exist_ok=True)
 
-    with open(filename, "w") as f:
-        json.dump([b.to_dict() for b in books], f, indent=4)
+    df.write_parquet(filename)
 
-def load_books(filename="books.json") -> List[Book]:
+def load_books(filename=None) -> pl.DataFrame:
+    if filename is None:
+        filename = os.getenv("DATA_FILE_PATH", "data/books.parquet")
+    if not os.path.exists(filename):
+        return pl.DataFrame([], schema=BOOK_SCHEMA)
+
     try:
-        with open(filename, "r") as f:
-            data = json.load(f)
-            return [Book.from_dict(d) for d in data]
-    except FileNotFoundError:
-        return []
+        return pl.read_parquet(filename)
+    except Exception:
+        return pl.DataFrame([], schema=BOOK_SCHEMA)

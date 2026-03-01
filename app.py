@@ -1,20 +1,62 @@
+import os
 import sys
+import json
 import polars as pl
+import pika
+from dotenv import load_dotenv
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                                QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
                                QHeaderView, QCheckBox, QGroupBox, QComboBox, QTextEdit,
                                QDialog, QFormLayout, QDialogButtonBox, QAbstractItemView,
                                QRadioButton, QButtonGroup, QScrollArea, QFrame, QSizePolicy,
-                               QGridLayout, QTableView)
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QTimer
+                               QGridLayout, QTableView, QPlainTextEdit)
+from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QTimer, QThread, Signal
 from PySide6.QtGui import QIntValidator
 
 from book import Book, generate_books, save_books, load_books
 
-DATA_FILE = "data/books.json"
+load_dotenv()
+
+DATA_FILE = os.getenv("DATA_FILE_PATH", "data/books.parquet")
+
+class RabbitMQWorker(QThread):
+    book_received = Signal(dict)
+
+    def run(self):
+        try:
+            host = os.getenv("RABBITMQ_HOST", "localhost")
+            self.connection = pika.BlockingConnection(pika.ConnectionParameters(host))
+            self.channel = self.connection.channel()
+
+            # Ensure durable=True matches the modern RabbitMQ standards
+            self.channel.queue_declare(queue='books_queue', durable=True)
+
+            def callback(ch, method, properties, body):
+                try:
+                    book_data = json.loads(body)
+                    self.book_received.emit(book_data)
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON from RabbitMQ: {e}")
+
+            self.channel.basic_consume(queue='books_queue', on_message_callback=callback, auto_ack=True)
+            self.channel.start_consuming()
+
+        except pika.exceptions.AMQPConnectionError as e:
+            print(f"RabbitMQ connection failed: {e}")
+            # Could implement retry logic or emit an error signal here
+        except Exception as e:
+            print(f"RabbitMQ worker error: {e}")
+
+    def stop(self):
+        if hasattr(self, 'connection') and self.connection.is_open:
+            def close_connection():
+                self.channel.stop_consuming()
+                self.connection.close()
+            self.connection.add_callback_threadsafe(close_connection)
+        self.wait()
 
 class BookTableModel(QAbstractTableModel):
-    def __init__(self, books):
+    def __init__(self, df: pl.DataFrame):
         super().__init__()
         # Define schema to handle empty list correctly
         self.schema = {
@@ -25,14 +67,15 @@ class BookTableModel(QAbstractTableModel):
             "language": pl.Utf8,
             "description": pl.Utf8
         }
-        data = [b.to_dict() for b in books] if books else []
-        self.full_df = pl.DataFrame(data, schema=self.schema)
+        self.full_df = df
         self.display_df = self.full_df.clone()
         self.columns = ["Title", "Year", "Author", "Genre", "Language"]
         self.col_map = {0: "title", 1: "year", 2: "author", 3: "genre", 4: "language"}
         
         self.current_sort_col = -1
         self.current_sort_order = Qt.SortOrder.AscendingOrder
+
+        self._hot_buffer = []
 
     def rowCount(self, parent=QModelIndex()):
         return self.display_df.height
@@ -62,6 +105,7 @@ class BookTableModel(QAbstractTableModel):
         self._apply_sort()
 
     def _apply_sort(self):
+        self.flush_buffer()
         col_name = self.col_map.get(self.current_sort_col)
         if not col_name:
             return
@@ -72,19 +116,25 @@ class BookTableModel(QAbstractTableModel):
         self.endResetModel()
 
     def add_book(self, book):
-        # We append to full_df. The view update happens when filters are reapplied/refreshed.
-        # Ensure schema matches to avoid type issues on append
-        new_row = pl.DataFrame([book.to_dict()], schema=self.schema)
-        # Use simple concat (creating new DF) as Polars is immutable
+        self._hot_buffer.append(book.to_dict())
+
+    def has_new_data(self):
+        return len(self._hot_buffer) > 0
+
+    def flush_buffer(self):
+        if not self._hot_buffer:
+            return
+
+        new_df = pl.DataFrame(self._hot_buffer, schema=self.schema)
         try:
-            self.full_df = pl.concat([self.full_df, new_row], how="vertical")
-        except Exception as e:
-            # Fallback for empty df case if schema differs slightly (shouldn't happen with explicit schema)
-             self.full_df = pl.concat([self.full_df, new_row], how="vertical_relaxed")
+            self.full_df = pl.concat([self.full_df, new_df], how="vertical")
+        except Exception:
+            self.full_df = pl.concat([self.full_df, new_df], how="vertical_relaxed")
         
-        # We don't automatically update display_df here; the main window calls update_filters()
-        
+        self._hot_buffer = []
+
     def apply_filters(self, title, author, min_year, max_year, genre, lang):
+        self.flush_buffer()
         # We don't call beginResetModel here because _apply_sort will do it.
         # But we need to update display_df first.
         
@@ -170,13 +220,39 @@ class BookManagerWindow(QMainWindow):
         self.resize(1200, 800)
 
         # Data Loading
-        self.books = load_books(DATA_FILE)
-        if not self.books:
-            self.books = generate_books(50_000)
-            save_books(self.books, DATA_FILE)
+        try:
+            df = load_books(DATA_FILE)
+        except Exception:
+             # Fallback if load fails (though load_books handles missing files, it might raise on corrupted ones)
+             df = pl.DataFrame([], schema={
+                "title": pl.Utf8,
+                "year": pl.Int64,
+                "author": pl.Utf8,
+                "genre": pl.Utf8,
+                "language": pl.Utf8,
+                "description": pl.Utf8
+            })
 
-        self.unique_genres = sorted(list(set(b.genre for b in self.books)))
-        self.unique_languages = sorted(list(set(b.language for b in self.books)))
+        if df.is_empty():
+             # Generate mock data
+             books = generate_books(50_000)
+             # Convert to DataFrame
+             data = [b.to_dict() for b in books]
+             df = pl.DataFrame(data, schema={
+                "title": pl.Utf8,
+                "year": pl.Int64,
+                "author": pl.Utf8,
+                "genre": pl.Utf8,
+                "language": pl.Utf8,
+                "description": pl.Utf8
+            })
+             save_books(df, DATA_FILE)
+
+        # Initialize Model
+        self.model = BookTableModel(df)
+
+        self.unique_genres = sorted(df["genre"].unique().to_list())
+        self.unique_languages = sorted(df["language"].unique().to_list())
 
         self.current_sort_column = -1
         self.current_sort_order = Qt.SortOrder.AscendingOrder
@@ -264,10 +340,14 @@ class BookManagerWindow(QMainWindow):
         filter_group.setLayout(filter_layout)
         left_layout.addWidget(filter_group)
 
-        # 3. Table
-        self.model = BookTableModel(self.books)
-        # Replaced ProxyModel with direct Polars filtering in TableModel
+        # 3. Table & Database Stats
+        # Model initialized earlier
         
+        # Total books label
+        self.total_books_label = QLabel()
+        self.total_books_label.setStyleSheet("font-weight: bold;")
+        left_layout.addWidget(self.total_books_label)
+
         self.table = QTableView()
         self.table.setModel(self.model)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -352,12 +432,46 @@ class BookManagerWindow(QMainWindow):
         desc_group.setLayout(desc_layout)
         right_layout.addWidget(desc_group)
 
+        # 6. Live Feed Area
+        live_feed_group = QGroupBox("Live Feed")
+        live_feed_layout = QVBoxLayout()
+        self.log_view = QPlainTextEdit()
+        self.log_view.setReadOnly(True)
+        # CRITICAL: Prevent memory leak from endless logging
+        self.log_view.setMaximumBlockCount(1000)
+        live_feed_layout.addWidget(self.log_view)
+        live_feed_group.setLayout(live_feed_layout)
+        right_layout.addWidget(live_feed_group)
+
         # Layout Assembly
         main_layout.addWidget(left_panel, 2)
         main_layout.addWidget(right_panel, 1)
 
         # Initial Population - Filters
         self.update_filters()
+
+        # Connect RabbitMQ Worker
+        self.rabbitmq_worker = RabbitMQWorker()
+        self.rabbitmq_worker.book_received.connect(self.handle_incoming_book)
+        self.rabbitmq_worker.start()
+
+        self.update_total_books_label()
+
+        # UI Update Timer (500ms) - Heartbeat for live UI refreshes
+        self.ui_timer = QTimer()
+        self.ui_timer.setInterval(500)
+        self.ui_timer.timeout.connect(self.check_and_update_feed)
+        self.ui_timer.start()
+
+        # Save Timer (60000ms) - Heartbeat for auto saving
+        self.save_timer = QTimer()
+        self.save_timer.setInterval(60000)
+        self.save_timer.timeout.connect(self.auto_save)
+        self.save_timer.start()
+
+    def update_total_books_label(self):
+        total_count = self.model.full_df.height + len(self.model._hot_buffer)
+        self.total_books_label.setText(f"Total Books in Database: {total_count}")
 
     def toggle_column(self, index, checked):
         self.table.setColumnHidden(index, not checked)
@@ -428,24 +542,27 @@ class BookManagerWindow(QMainWindow):
             book = dlg.get_data()
             self.save_and_update(book)
 
+    def check_and_update_feed(self):
+        if self.model.has_new_data():
+            self.update_filters()
+            self.update_total_books_label()
+
+    def handle_incoming_book(self, book_data):
+        book = Book.from_dict(book_data)
+        self.model.add_book(book)
+        self.log_view.appendPlainText(f"[+] Received: {book.title} ({book.author})")
+
+    def auto_save(self):
+        self.model.flush_buffer()
+        save_books(self.model.full_df, DATA_FILE)
+
     def save_and_update(self, book):
         self.model.add_book(book)
-        # Update persistence if needed, though here we'd need to reconstruct the full list or keep it synced.
-        # Since we converted to Polars, self.model.books is no longer the source of truth if we modify the DF?
-        # Actually BookTableModel.__init__ took `books`. But we didn't keep `self.books` in the model!
-        # We need to ensure persistence works. 
-        # Ideally we'd persist the full dataframe back to list of dicts.
-        
-        # Let's reconstruct the books list from the full dataframe to save it
-        # Or simpler: just append to the original list if we kept it? 
-        # But we replaced `self.books` with `self.full_df` in the model.
-        # The Window created the list `self.books` initially. 
-        # Let's append to that local list and save it.
-        self.books.append(book)
-        save_books(self.books, DATA_FILE)
+        self.auto_save()
         
         # Refresh the view to show the new book (if it matches filters)
         self.update_filters()
+        self.update_total_books_label()
 
         # Update dropdowns
         if book.genre not in self.unique_genres:
@@ -457,6 +574,13 @@ class BookManagerWindow(QMainWindow):
             self.unique_languages.append(book.language)
             self.unique_languages.sort()
             self.filter_lang.addItem(book.language)
+
+    def closeEvent(self, event):
+        self.ui_timer.stop()
+        self.save_timer.stop()
+        self.rabbitmq_worker.stop()
+        self.auto_save()
+        event.accept()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
