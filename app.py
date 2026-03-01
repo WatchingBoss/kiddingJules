@@ -20,11 +20,11 @@ class RabbitMQWorker(QThread):
 
     def run(self):
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-            channel = connection.channel()
+            self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+            self.channel = self.connection.channel()
 
             # Ensure durable=True matches the modern RabbitMQ standards
-            channel.queue_declare(queue='books_queue', durable=True)
+            self.channel.queue_declare(queue='books_queue', durable=True)
 
             def callback(ch, method, properties, body):
                 try:
@@ -33,14 +33,19 @@ class RabbitMQWorker(QThread):
                 except json.JSONDecodeError as e:
                     print(f"Error decoding JSON from RabbitMQ: {e}")
 
-            channel.basic_consume(queue='books_queue', on_message_callback=callback, auto_ack=True)
-            channel.start_consuming()
+            self.channel.basic_consume(queue='books_queue', on_message_callback=callback, auto_ack=True)
+            self.channel.start_consuming()
 
         except pika.exceptions.AMQPConnectionError as e:
             print(f"RabbitMQ connection failed: {e}")
             # Could implement retry logic or emit an error signal here
         except Exception as e:
             print(f"RabbitMQ worker error: {e}")
+
+    def stop(self):
+        if hasattr(self, 'connection') and self.connection.is_open:
+            self.connection.add_callback_threadsafe(self.channel.stop_consuming)
+        self.wait()
 
 class BookTableModel(QAbstractTableModel):
     def __init__(self, df: pl.DataFrame):
@@ -441,6 +446,18 @@ class BookManagerWindow(QMainWindow):
 
         self.update_total_books_label()
 
+        # UI Update Timer (500ms) - Heartbeat for live UI refreshes
+        self.ui_timer = QTimer()
+        self.ui_timer.setInterval(500)
+        self.ui_timer.timeout.connect(self.update_filters)
+        self.ui_timer.start()
+
+        # Save Timer (60000ms) - Heartbeat for auto saving
+        self.save_timer = QTimer()
+        self.save_timer.setInterval(60000)
+        self.save_timer.timeout.connect(self.auto_save)
+        self.save_timer.start()
+
     def update_total_books_label(self):
         total_count = self.model.full_df.height + len(self.model._hot_buffer)
         self.total_books_label.setText(f"Total Books in Database: {total_count}")
@@ -520,10 +537,13 @@ class BookManagerWindow(QMainWindow):
         self.log_view.appendPlainText(f"[+] Received: {book.title} ({book.author})")
         self.update_total_books_label()
 
-    def save_and_update(self, book):
-        self.model.add_book(book)
+    def auto_save(self):
         self.model.flush_buffer()
         save_books(self.model.full_df, DATA_FILE)
+
+    def save_and_update(self, book):
+        self.model.add_book(book)
+        self.auto_save()
         
         # Refresh the view to show the new book (if it matches filters)
         self.update_filters()
@@ -539,6 +559,13 @@ class BookManagerWindow(QMainWindow):
             self.unique_languages.append(book.language)
             self.unique_languages.sort()
             self.filter_lang.addItem(book.language)
+
+    def closeEvent(self, event):
+        self.ui_timer.stop()
+        self.save_timer.stop()
+        self.rabbitmq_worker.stop()
+        self.auto_save()
+        event.accept()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
