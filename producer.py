@@ -2,6 +2,9 @@ import json
 import random
 import time
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()
 
 try:
     import pika
@@ -19,9 +22,10 @@ def main():
     languages = ["English", "Spanish", "French", "German", "Italian", "Chinese", "Japanese"]
 
     # 1. Establish Connection
-    print("Connecting to RabbitMQ at localhost...")
+    rmq_host = os.getenv("RABBITMQ_HOST", "localhost")
+    print(f"Connecting to RabbitMQ at {rmq_host}...")
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(rmq_host))
         channel = connection.channel()
     except pika.exceptions.AMQPConnectionError as e:
         print(f"Failed to connect to RabbitMQ broker: {e}")
