@@ -6,7 +6,7 @@ import polars as pl
 
 from config import DATA_DIR, PARQUET_SOURCE_DIR
 from engine import BacktestEngine
-from strategies.registry import all_strategies
+from strategies.registry import all_strategies, get_strategy_class
 
 
 parquet_source_path = Path(PARQUET_SOURCE_DIR)
@@ -38,11 +38,19 @@ def main():
     raw_1m_candles_lf = pl.scan_parquet(os.path.join(PARQUET_SOURCE_DIR, "**/*.parquet"))
     engine = BacktestEngine(raw_1m_candles_lf)
 
-    strategies = all_strategies()
-    print(f"{len(strategies)} strategies loaded.")
+    UniversalEMA = get_strategy_class("UniversalEmaStrategy")
 
-    for strategy in strategies:
-        completed_trades = engine.run(strategy)
+    strategies_to_test = [
+        UniversalEMA(name="Pure_5m_Cross", exec_tf="5m"),
+        UniversalEMA(name="Cross_5m_Filter_15m_Bull", exec_tf="5m", filters={"15m": "bullish"}),
+        UniversalEMA(name="Cross_5m_Filter_1h_Bull", exec_tf="5m", filters={"1h": "bullish"}),
+        UniversalEMA(name="Cross_5m_Heavy_Trend", exec_tf="5m", filters={"15m": "bullish", "1h": "bullish"}),
+    ]
+
+    print(f"{len(strategies_to_test)} strategies loaded.")
+
+    for strategy in strategies_to_test:
+        completed_trades = engine.run(strategy, tp_pct=0.005, sl_pct=0.002)
         engine.report_metrics(completed_trades)
 
 if __name__ == "__main__":
