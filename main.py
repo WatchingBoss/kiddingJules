@@ -6,7 +6,7 @@ import polars as pl
 
 from config import DATA_DIR, PARQUET_SOURCE_DIR
 from engine import BacktestEngine
-from strategies.registry import all_strategies, get_strategy_class
+from strategies.registry import get_strategy_class
 
 
 parquet_source_path = Path(PARQUET_SOURCE_DIR)
