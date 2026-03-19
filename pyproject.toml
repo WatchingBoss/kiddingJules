@@ -1,13 +1,11 @@
 [project]
-name = "learn_pyside6"
+name = "StockStatBacktester"
 version = "0.1.0"
-description = "We learn how to use pyside6 and create GUI app in python"
+description = "Framework testing trading strategies"
 readme = "README.md"
-requires-python = "==3.13.*"
+requires-python = ">=3.13"
 dependencies = [
-    "Faker",
-    "PySide6",
-    "dotenv>=0.9.9",
-    "pika>=1.3.2",
-    "polars",
+    "numpy>=2.4.2",
+    "polars>=1.38.1",
+    "scipy>=1.17.1",
 ]

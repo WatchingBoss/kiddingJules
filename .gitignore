@@ -4,3 +4,5 @@ uv.lock
 data/
 .env
 /.idea
+csv_to_parquet_no_commit.py
+.DS_Store
