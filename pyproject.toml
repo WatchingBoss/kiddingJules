@@ -3,7 +3,7 @@ name = "StockStatBacktester"
 version = "0.1.0"
 description = "Framework testing trading strategies"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13.12"
 dependencies = [
     "numpy>=2.4.2",
     "polars>=1.38.1",

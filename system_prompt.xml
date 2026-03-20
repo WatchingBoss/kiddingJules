@@ -6,7 +6,7 @@
         </instruction_override>
 
         <environment>
-            <python_version>3.13</python_version>
+            <python_version>3.13.12</python_version>
             <project_manager>uv</project_manager>
             <primary_libraries>
                 <library>polars</library>
