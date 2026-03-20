@@ -100,9 +100,10 @@ class BacktestEngine():
         ).rename({"Date": "Close_Date"}).collect()
 
     @staticmethod
-    def log_trades(trades_df: pl.DataFrame):
-        """Log all completed trades in the required format."""
-        for row in trades_df.iter_rows(named=True):
+    def log_trades(trades_df: pl.DataFrame, rows: int = None):
+        """Log completed trades in the required format."""
+        df_to_log = trades_df if rows is None else trades_df.tail(rows)
+        for row in df_to_log.iter_rows(named=True):
             ticker = row["Ticker"]
             open_date = row["Open_Date"]
             close_date = row["Close_Date"]
@@ -119,7 +120,10 @@ class BacktestEngine():
             pl.col("Profit").median().alias("Median"),
             (pl.col("Profit") > 0).sum().alias("Positive"),
             (pl.col("Profit") < 0).sum().alias("Negative"),
-            pl.col("Profit").sum().alias("Total_Revenue")
+            pl.col("Profit").sum().alias("Total_Revenue"),
+            (pl.col("Exit_Reason") == "ema cross").sum().alias("Reason_Default"),
+            (pl.col("Exit_Reason") == "take profit").sum().alias("Reason_TP"),
+            (pl.col("Exit_Reason") == "stop loss").sum().alias("Reason_SL")
         ).with_columns(
             pl.when(pl.col("Negative") == 0)
             .then(pl.lit(float("inf")))
