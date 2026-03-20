@@ -65,27 +65,51 @@ class BacktestEngine():
 
         # 4. Calculate accurate Profit (Pessimistic: SL takes precedence over TP)
         profit_expr = pl.col("Close") - pl.col("Active_Entry") # Default to Strategy Sell
+        reason_expr = pl.lit("ema cross")
 
         if tp_pct is not None:
             profit_expr = pl.when(pl.col("Hit_TP")).then(
                 pl.col("Active_Entry") * (1 + tp_pct) - pl.col("Active_Entry")
             ).otherwise(profit_expr)
+            reason_expr = pl.when(pl.col("Hit_TP")).then(pl.lit("take profit")).otherwise(reason_expr)
 
         if sl_pct is not None:
             profit_expr = pl.when(pl.col("Hit_SL")).then(
                 pl.col("Active_Entry") * (1 - sl_pct) - pl.col("Active_Entry")
             ).otherwise(profit_expr)
+            reason_expr = pl.when(pl.col("Hit_SL")).then(pl.lit("stop loss")).otherwise(reason_expr)
 
         results = strict_executions.with_columns(
             pl.when(pl.col("Action") == -1)
             .then(profit_expr)
             .otherwise(None)
-            .alias("Profit")
+            .alias("Profit"),
+            pl.when(pl.col("Action") == -1)
+            .then(reason_expr)
+            .otherwise(None)
+            .alias("Exit_Reason")
+        )
+
+        # Get the actual open date of the trade by shifting the Date column over Ticker
+        results = results.with_columns(
+            pl.col("Date").shift(1).over("Ticker").alias("Open_Date")
         )
 
         return results.filter(pl.col("Profit").is_not_null()).select(
-            "Ticker", "Date", "Close", "Profit"
-        ).collect()
+            "Ticker", "Open_Date", "Date", "Exit_Reason", "Profit"
+        ).rename({"Date": "Close_Date"}).collect()
+
+    @staticmethod
+    def log_trades(trades_df: pl.DataFrame, rows: int = None):
+        """Log completed trades in the required format."""
+        df_to_log = trades_df if rows is None else trades_df.tail(rows)
+        for row in df_to_log.iter_rows(named=True):
+            ticker = row["Ticker"]
+            open_date = row["Open_Date"]
+            close_date = row["Close_Date"]
+            reason = row["Exit_Reason"]
+            profit = row["Profit"]
+            print(f"{ticker}, {open_date} (buy), {close_date} (sell), {reason}, {profit}")
 
     @staticmethod
     def report_metrics(trades_df: pl.DataFrame):
@@ -95,6 +119,15 @@ class BacktestEngine():
             pl.col("Profit").mean().alias("Average"),
             pl.col("Profit").median().alias("Median"),
             (pl.col("Profit") > 0).sum().alias("Positive"),
-            (pl.col("Profit") < 0).sum().alias("Negative")
+            (pl.col("Profit") < 0).sum().alias("Negative"),
+            pl.col("Profit").sum().alias("Total_Revenue"),
+            (pl.col("Exit_Reason") == "ema cross").sum().alias("Reason_Default"),
+            (pl.col("Exit_Reason") == "take profit").sum().alias("Reason_TP"),
+            (pl.col("Exit_Reason") == "stop loss").sum().alias("Reason_SL")
+        ).with_columns(
+            pl.when(pl.col("Negative") == 0)
+            .then(pl.lit(float("inf")))
+            .otherwise(pl.col("Positive") / pl.col("Negative"))
+            .alias("Pos/Neg_Ratio")
         ).sort("Ticker")
         print(metrics)

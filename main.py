@@ -51,6 +51,7 @@ def main():
 
     for strategy in strategies_to_test:
         completed_trades = engine.run(strategy, tp_pct=0.005, sl_pct=0.002)
+        engine.log_trades(completed_trades)
         engine.report_metrics(completed_trades)
 
 if __name__ == "__main__":
