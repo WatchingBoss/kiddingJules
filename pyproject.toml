@@ -1,11 +1,10 @@
 [project]
-name = "StockStatBacktester"
+name = "TAStatusOnline"
 version = "0.1.0"
-description = "Framework testing trading strategies"
+description = "Realtime TA analizing stock data and show status in web GUI"
 readme = "README.md"
 requires-python = ">=3.13.12"
 dependencies = [
     "numpy>=2.4.2",
     "polars>=1.38.1",
-    "scipy>=1.17.1",
 ]

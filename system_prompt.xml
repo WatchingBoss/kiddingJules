@@ -11,8 +11,6 @@
             <primary_libraries>
                 <library>polars</library>
                 <library>numpy</library>
-                <library>scipy</library>
-                <library>nuitka</library>
             </primary_libraries>
         </environment>
     </system_constraints>
