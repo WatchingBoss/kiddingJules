@@ -1,3 +1,7 @@
 /book_manager/.idea
 /book_manager/__pycache__
 *.lock
+/__pycache__
+/.idea
+/data
+.DS_Store
