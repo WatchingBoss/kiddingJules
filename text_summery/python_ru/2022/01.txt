@@ -1,0 +1,217 @@
+2022-01-01T09:55:50
+Лучшие бесплатные курсы Python 2022
+
+https://uproger.com/luchshij-besplatnye-kursy-python-2022/
+
+@pro_python_code
+============================================================
+2022-01-03T10:58:05
+Лямбда-функция в Python 
+
+https://dev-gang.ru/article/ljambdafunkcija-v-python-fe2p8vf789/
+
+@pro_python_code
+============================================================
+2022-01-03T15:51:12
+Написание быстрых асинхронных HTTP-Запросов с Python
+
+https://uproger.com/napisanie-bystryh-asinhronnyh-http-zaprosov-s-python/
+
+@pro_python_code
+============================================================
+2022-01-04T09:38:19
+Управление средами Python на профессиональном уровне
+
+https://nuancesprog.ru/p/14896/
+
+@pro_python_code
+============================================================
+2022-01-06T10:21:48
+Создаем бота клиентской службы с помощью Python, Flask и Pinecone
+
+https://nuancesprog.ru/p/14907/
+
+@pro_python_code
+============================================================
+2022-01-07T10:35:40
+Классический алгоритм для поиска выхода из лабиринта. 
+
+https://nuancesprog.ru/p/11147
+
+@pro_python_code
+============================================================
+2022-01-07T10:37:08
+В чем разниц между list.sort() и sorted() в Python.
+
+https://uproger.com/v-chem-raznicz-mezhdu-list-sort-i-sorted-v-python/
+
+@pro_python_code
+============================================================
+2022-01-08T10:53:16
+Как выполнять выражения и процедуры PL/SQL в Python
+
+https://nuancesprog.ru/p/14913/
+
+@pro_python_code
+============================================================
+2022-01-10T09:43:25
+6 функций Pandas для быстрого эксплораторного анализа данных
+
+https://nuancesprog.ru/p/14933/
+
+@pro_python_code
+============================================================
+2022-01-11T10:46:47
+6 советов и приемов по f-строкам Python
+
+https://uproger.com/6-sovetov-i-priemov-po-f-strokam-python/
+
+@pro_python_code
+============================================================
+2022-01-11T14:01:12
+Некоторые специальные возможности Python
+
+https://pythonist.ru/nekotorye-speczialnye-vozmozhnosti-v-yazyke-python/
+
+@pro_python_code
+============================================================
+2022-01-12T09:23:24
+Пишем чистый код на Python с PIPES
+
+https://uproger.com/pishem-chistyj-kod-na-python-s-pipes/
+
+@pro_python_code
+============================================================
+2022-01-13T10:16:34
+Замените списки Python и сделайте свой код быстрее 
+
+https://dev-gang.ru/article/zamenite-spiski-python-i-sdelaite-svoi-kod-bystree-12e08jzoy5/
+
+@pro_python_code
+============================================================
+2022-01-14T11:16:34
+Почему не стоит использовать or для проверки нескольких условий в Python
+
+https://nuancesprog.ru/p/14971/
+
+@pro_python_code
+============================================================
+2022-01-15T11:32:21
+Обнаружение объектов с помощью цветовой сегментации изображений в Python
+
+https://nuancesprog.ru/p/3968/
+
+@pro_python_code
+============================================================
+2022-01-16T10:09:57
+Генерация API-документации из docstrings на Python
+
+https://nuancesprog.ru/p/14983/
+
+@pro_python_code
+============================================================
+2022-01-17T10:52:39
+Python перемешивание shuffle
+
+https://uproger.com/python-peremeshivanie-shuffle/
+
+@pro_python_code
+============================================================
+2022-01-17T10:53:17
+Как PyPy ускоряет Python до уровня C?
+
+https://nuancesprog.ru/p/14989/
+
+@pro_python_code
+============================================================
+2022-01-18T11:21:03
+Запуск Redis в Google Colab Python
+
+https://uproger.com/zapusk-redis-v-google-colab-python/
+
+@pro_python_code
+============================================================
+2022-01-19T10:17:57
+Галерея лучших модулей Python
+
+https://nuancesprog.ru/p/10672/
+
+@pro_python_code
+============================================================
+2022-01-20T11:12:53
+Управление памятью в Python: 3 частых вопроса на собеседовании
+
+https://nuancesprog.ru/p/15010/
+
+@pro_python_code
+============================================================
+2022-01-21T10:26:02
+Как определить содержимое ZIP-файла без скачивания
+
+https://nuancesprog.ru/p/15013/
+
+@pro_python_code
+============================================================
+2022-01-22T12:25:20
+Преобразуем список словарей в список значений, соответствующих указанному ключу Python.
+
+https://uproger.com/preobrazuem-spisok-slovarej-v-spisok-znachenij-sootvetstvuyushhih-ukazannomu-klyuchu-python/
+
+@pro_python_code
+============================================================
+2022-01-23T11:07:36
+Как работать с большими наборами данных в Python: 3 способа
+
+https://nuancesprog.ru/p/15030/
+
+@machinelearning_ru
+============================================================
+2022-01-23T11:07:48
+Python Самый простой пример async/await 
+
+https://uproger.com/samyj-prostoj-primer-async-await-vozmozhnyj-v-python/
+
+@pro_python_code
+============================================================
+2022-01-24T11:40:43
+Обзор библиотеки Datatable в Python
+
+https://nuancesprog.ru/p/4409/
+
+@pro_python_code
+============================================================
+2022-01-25T10:56:41
+Расширенный Python: абстрактный базовый класс и модуль abc
+
+https://dev-gang.ru/article/rasshirennyi-python-abstraktnyi-bazovyi-klass-i-modul-abc-f4ztjlg512/
+
+@pro_python_code
+============================================================
+2022-01-26T10:47:28
+Генераторы словарей в Python
+
+https://pythonist.ru/generatory-slovarej-v-python/
+
+@pro_python_code
+============================================================
+2022-01-27T09:34:35
+Легкий способ парсинга новостных статей на Python
+
+https://pythonist.ru/legkij-sposob-parsinga-novostnyh-statej-na-python/
+
+@pro_python_code
+============================================================
+2022-01-29T16:30:28
+🐍🧩 Словари в Python: 12 задач для начинающих с решениями
+
+https://proglib.io/p/slovari-v-python-12-zadach-dlya-nachinayushchih-s-resheniyami-2022-01-28
+
+@pro_python_code
+============================================================
+2022-01-31T14:44:39
+Python: сумма элементов в списке
+
+https://uproger.com/python-summa-elementov-v-spiske/
+
+@pro_python_code
+============================================================

@@ -1,0 +1,247 @@
+2022-02-01T15:09:53
+Как вернуть дизлайки на YouTube c  Python
+
+https://pythonist.ru/kak-vernut-dizlajki-na-youtube/
+
+@pro_python_code
+============================================================
+2022-02-02T15:26:20
+5 доказательств силы итерируемых объектов в Python
+
+https://nuancesprog.ru/p/10504/
+
+@pro_python_code
+============================================================
+2022-02-03T16:37:26
+Вычисляем среднее значение в Python
+
+https://uproger.com/vychislyaem-srednee-znachenie-v-python/
+
+@pro_python_code
+============================================================
+2022-02-04T16:16:58
+Дескрипторы в Python
+
+https://pythonist.ru/deskriptory-v-python/
+
+@pro_python_code
+============================================================
+2022-02-05T17:25:14
+4 бесплатные игры для изучения Python
+
+https://nuancesprog.ru/p/15136/
+
+@pro_python_code
+============================================================
+2022-02-07T09:31:10
+Функция-лямбда в Python
+
+https://uproger.com/funkcziya-lyambda-v-python/
+
+@pro_python_code
+============================================================
+2022-02-09T16:17:28
+Аргументы функции Python 
+
+https://dev-gang.ru/article/argumenty-funkcii-python-a4bzy4vj8o/
+
+@pro_python_code
+============================================================
+2022-02-09T16:18:04
+Новый модуль временных рядов PyCaret
+
+https://nuancesprog.ru/p/15161/
+
+@pro_python_code
+============================================================
+2022-02-11T10:33:46
+Как запросить датафрейм Pandas с помощью SQL
+
+https://uproger.com/schitaem-kolichestvo-czifr-czelogo-chisla-v-python/
+
+@pro_python_code
+============================================================
+2022-02-13T14:29:21
+Встроенные методы списка в Python
+
+https://uproger.com/vstroennye-metody-spiska-v-python/
+
+@pro_python_code
+============================================================
+2022-02-13T14:31:17
+Когда стоит использовать yield вместо return в Python
+
+https://pythonru.com/osnovy/kogda-stoit-ispolzovat-yield-vmesto-return-v-python
+
+@pro_python_code
+============================================================
+2022-02-14T13:03:26
+SageMath: Занимаемся математикой на Python
+
+https://dev-gang.ru/article/sagemath-zanimaemsja-matematikoi-na-python-nw0cm2djzy/
+
+@pro_python_code
+============================================================
+2022-02-15T13:18:34
+Как использовать библиотеку Rich с Python
+
+https://dev-gang.ru/article/kak-ispolzovat-biblioteku-rich-s-python-eeloh0tt8z/
+
+@pro_python_code
+============================================================
+2022-02-16T13:46:51
+Нижнее подчеркивание в Python
+
+https://pythonist.ru/zachem-nuzhno-nizhnee-podcherkivanie-v-python/
+
+@pro_python_code
+============================================================
+2022-02-17T12:53:10
+Инновационный Технологический Центр МОЛНЕТ с 25 по 27 февраля 2022 года проводит онлайн-хакатон «TV Neuro Technologies», в рамках которого участникам предстоит решить одну из четырех задач на выбор с применением SQL, JAVA и нейросетевых технологий: 
+• Математическое моделирование и прогнозирование развития сложных систем 
+• Визуализации структуры состояний системы 
+• Программирование базы данных 
+• Нейросетевые технологии для классификации данных 
+
+Хакатон направлен на поиск специалистов и инновационных решений в областях анализа данных и машинного обучения. Мы ждем математиков, системных и прикладных программистов, разработчиков ПО, специалистов в data-science и аналитиков. 
+
+Участники поборются за призовой фонд в размере 400 тысяч рублей, возможность попасть на стажировку или войти в штат сотрудников ИТЦ МОЛНЕТ для реализации своих проектов. 
+
+Прием заявок на хакатон открыт до 23 февраля 2022 года. 
+
+Подробности и регистрация: https://bit.ly/3sIaeZk
+============================================================
+2022-02-17T16:02:40
+Как использовать Модуль sys.argv в Python
+
+https://uproger.com/kak-ispolzovat-modul-sys-argv-v-python/
+
+@pro_python_code
+============================================================
+2022-02-18T13:57:26
+8️⃣  причин использовать Pydantic для улучшения парсинга и валидации данных
+
+https://nuancesprog.ru/p/15238/
+
+@pro_python_code
+============================================================
+2022-02-19T11:05:39
+Полезные IT каналы 
+
+https://t.me/ai_machinelearning_big_data - best  ml channel
+https://t.me/ArtificialIntelligencedl - ai
+https://t.me/pythonl  - largest python channel
+https://t.me/pro_python_code - python ru
+https://t.me/Pythonl_django Python chat 
+
+https://t.me/datascienceiot - ds, ml free books
+https://t.me/programming_books_it
+https://t.me/pythonlbooks -  python books 
+
+https://t.me/javascriptv - javascript channel
+https://t.me/about_javascript - advanced js
+https://t.me/JavaScript_testit - js tests
+https://t.me/Golang_google - Go channel
+https://t.me/golangl. -golang chat
+https://t.me/golang_jobsgo -golang jobs
+
+https://t.me/neural - neural nets
+https://t.me/hashdev - web development
+https://t.me/htmlcssjavas - web
+https://t.me/hr_itwork - jobs
+
+https://t.me/linux_kal - kali linux
+https://t.me/machinee_learning - ml chat
+https://t.me/linuxkalii - linux chat 
+
+https://t.me/machinelearning_ru - ml ru
+https://t.me/python_testit -  python tests
+https://t.me/csharp_ci- c#
+https://t.me/Machinelearningtest - machine learning test
+https://t.me/tensorflowblog - tensorflow
+https://t.me/Django_pythonl django
+https://t.me/javatg - java
+https://t.me/golangtests - Golang quizzes
+https://t.me/sqlhub - sql
+
+https://t.me/jsspeak - js chat
+
+https://t.me/memes_prog - it memes
+============================================================
+2022-02-19T11:06:12
+Топ-5 ошибок при объявлении функций в Python
+
+https://nuancesprog.ru/p/11182/
+
+@pro_python_code
+============================================================
+2022-02-20T19:51:05
+Как создать простого трояна на Python
+
+https://cryptoworld.su/kak-sozdat-prostogo-troyana-na-python/
+
+@pro_python_code
+============================================================
+2022-02-21T10:24:40
+🎲🐍  Моделируем игру в кости на Python с помощью метода Монте-Карло
+
+https://proglib.io/p/modeliruem-igru-v-kosti-na-python-s-pomoshchyu-metoda-monte-karlo-2022-02-21
+
+@machinelearning_ru
+============================================================
+2022-02-21T10:24:59
+Почему стоит использовать Pathlib в качестве альтернативы модуля OS
+
+https://nuancesprog.ru/p/15252/
+
+@pro_python_code
+============================================================
+2022-02-22T11:51:17
+Распознавание речи с помощью Python
+
+https://nuancesprog.ru/p/15185/
+
+@pro_python_code
+============================================================
+2022-02-24T14:07:23
+Инструмент, который автоматически находит уязвимости в Python-коде
+
+https://nuancesprog.ru/p/3563/
+
+@pro_python_code
+============================================================
+2022-02-25T11:03:04
+🧊  Фундаментальные структуры данных: массивы и связанные списки с реализацией на Python
+
+https://proglib.io/p/fundamentalnye-struktury-dannyh-massivy-i-svyazannye-spiski-s-realizaciey-na-python-2022-02-24
+
+@pro_python_code
+============================================================
+2022-02-26T10:19:59
+Динамические и статические вычислительные графы в PyTorch и TensorFlow
+
+https://uproger.com/dinamicheskie-i-staticheskie-vychislitelnye-grafy-v-pytorch-i-tensorflow/
+
+@pro_python_code
+============================================================
+2022-02-26T13:55:22
+5 интересных вариантов использования метаклассов в Python
+
+https://pythonist.ru/5-interesnyh-variantov-ispolzovaniya-metaklassov-v-python/
+
+@pro_python_code
+============================================================
+2022-02-27T11:21:07
+Игра «Змейка» на Python c использованием модуля Pygame
+
+https://uproger.com/igra-zmejka-na-python-c-ispolzovaniem-modulya-pygame/
+
+@pro_python_code
+============================================================
+2022-02-28T11:49:46
+Создание игры в стиле Zelda на Python c Pygame
+
+https://uproger.com/sozdanie-igry-v-stile-zelda-na-python-c-pygame/
+
+@pro_python_code
+============================================================

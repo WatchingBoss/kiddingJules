@@ -1,0 +1,208 @@
+2025-01-06T14:20:23
+👩‍💻  htmy — асинхронный движок рендеринга на Python, который позволяет создавать HTML-компоненты!
+
+🌟 Он поддерживает функциональный подход, контексты наподобие React, обработку ошибок через ErrorBoundary и встроенные HTML-теги. Система полностью настраиваемая, поддерживает Markdown и асинхронную интернационализацию. Подходит для работы с любыми бэкендами, CSS и JS-фреймворками. Удобен для гибкого управления логикой и визуализацией.
+
+🔐 Лицензия: MIT
+
+🖥 Github
+============================================================
+2025-01-07T13:02:30
+Детектор цвета на Python
+============================================================
+2025-01-09T20:47:28
+🥷 Репозиторий nfs-security-tooling — это два инструмента для анализа и взаимодействия с серверами NFS (Network File System)!
+
+🌟 nfs_analyze: Этот скрипт собирает подробную информацию о сервере NFS и выявляет потенциальные ошибки конфигурации, которые могут представлять угрозу безопасности. Он основан на модифицированной версии библиотеки pynfs и предназначен для использования в среде Linux. 
+
+🌟 fuse_nfs: Инструмент, позволяющий монтировать экспортированные NFS-ресурсы с использованием FUSE (Filesystem in Userspace), что обеспечивает гибкость при работе с файловыми системами на уровне пользователя. 
+
+💡 Оба инструмента предназначены для специалистов по безопасности и системных администраторов, стремящихся оценить и улучшить безопасность своих NFS-серверов. Для установки этих инструментов необходимо наличие зависимостей, таких как pkg-config, libfuse3-dev и python3-dev. После установки зависимостей инструменты можно установить с помощью pipx.
+
+🔐 Лицензия: GPL-3.0
+
+🖥 Github
+============================================================
+2025-01-10T19:31:32
+Генрируем фейковые данные с python
+============================================================
+2025-01-11T07:01:24
+Numpy — это все, что вам нужно
+============================================================
+2025-01-12T07:12:47
+🖥 Переводим Аудио в текст, с  помощью Python
+============================================================
+2025-01-13T09:40:30
+🎓 Введение в статистическую теорию машинного обучения
+
+📌 Видео 
+📌 Урок 1 / Урок2 / Урок3 / Урок4 /  Урок5 / Урок 6 
+📌 Colab
+📌Полный курс
+============================================================
+2025-01-14T09:00:21
+🖥 Распаковка файлов с Python
+============================================================
+2025-01-16T06:57:47
+🖥 Скрипт для записи экрана, с помощью Python
+============================================================
+2025-01-18T13:40:00
+⚡️Легкий способ получать свежие обновления и следить за трендами в разработке на вашем языке. Находите свой стек и подписывайтесь:
+
+МАШИННОЕ ОБУЧЕНИЕ: t.me/ai_machinelearning_big_data
+C++ t.me/cpluspluc
+Python: t.me/pythonl
+Linux: t.me/linuxacademiya
+Хакинг: t.me/linuxkalii
+Devops: t.me/DevOPSitsec
+Data Science: t.me/data_analysis_ml
+Javascript: t.me/javascriptv
+C#: t.me/csharp_ci
+Java: t.me/javatg
+Базы данных: t.me/sqlhub
+Python  собеседования: t.me/python_job_interview
+Мобильная разработка: t.me/mobdevelop
+Docker: t.me/DevopsDocker 
+Golang: t.me/Golang_google
+React: t.me/react_tg
+Rust: t.me/rust_code
+ИИ: t.me/vistehno
+PHP: t.me/phpshka
+Android: t.me/android_its
+Frontend: t.me/front
+Big Data: t.me/bigdatai
+Собеседования МЛ: t.me/machinelearning_interview
+МАТЕМАТИКА: t.me/data_math
+Kubernets: t.me/kubernetc
+Разработка игр: https://t.me/gamedev
+Haskell: t.me/haskell_tg
+
+💼 Папка с вакансиями: t.me/addlist/_zyy_jQ_QUsyM2Vi
+Папка  Go разработчика: t.me/addlist/MUtJEeJSxeY2YTFi
+Папка Python разработчика: t.me/addlist/eEPya-HF6mkxMGIy
+Папка ML: https://t.me/addlist/2Ls-snqEeytkMDgy
+Папка FRONTEND: https://t.me/addlist/mzMMG3RPZhY2M2Iy
+
+😆ИТ-Мемы: t.me/memes_prog
+🇬🇧Английский: t.me/english_forprogrammers
+🧠ИИ: t.me/vistehno
+
+🎓954ГБ ОПЕНСОРС КУРСОВ: @courses
+📕Ит-книги бесплатно: https://t.me/addlist/BkskQciUW_FhNjEy
+============================================================
+2025-01-18T19:14:47
+👩‍💻 python-sortedcontainers — библиотека коллекций Python, которые поддерживают автоматическую сортировку: SortedList, SortedDict и SortedSet!
+
+🌟 Эти структуры данных реализованы на чистом Python, но обеспечивают производительность, сравнимую с библиотеками на C. Библиотека выделяется простотой использования, отсутствием необходимости компиляции и эффективностью операций, таких как вставка, удаление и поиск, которые выполняются быстрее линейного времени.
+
+🔐 Лицензия: Apache-2.0
+
+🖥 Github
+============================================================
+2025-01-19T18:15:37
+🚀Только что выпущено новое семейство моделей генерации кода Salesforce (SFR-Embedding-Code), занявшее 1-е место на бенчмарке CoIR! 
+
+Модель доступна в в 2-х размерах: 2B, 400M. 
+
+Основные характеристики:
+1️⃣ Модель 2B: Занимает первое место в CoIR.
+2️⃣ Модель 400M: демонстрирует  лучшие показатели среди моделей на 0,5B параметров.
+3️⃣ Поддерживает 12 языков программирования, Python, Java, C++, JavaScript, C# и другие!
+
+Пример Запуска:
+
+import torch.nn.functional as F
+from transformers import AutoTokenizer, AutoModel
+
+# Each query needs to be accompanied by an corresponding instruction describing the task.
+query_instruction_example = "Given Code or Text, retrieval relevant content"
+queries = [
+    "how to implement quick sort in Python?"
+    ]
+
+# No instruction needed for retrieval passages
+passages = [
+    "def quick_sort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quick_sort(left) + middle + quick_sort(right)",
+    "def bubble_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        for j in range(0, n-i-1):\n            if arr[j] > arr[j+1]:\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n    return arr"
+]
+
+# load model with tokenizer
+model = AutoModel.from_pretrained('Salesforce/SFR-Embedding-Code-2B_R', trust_remote_code=True)
+
+# get the embeddings
+max_length = 32768
+query_embeddings = model.encode_queries(queries, instruction=query_instruction_example, max_length=max_length)
+passage_embeddings = model.encode_corpus(passages, max_length=max_length)
+
+# normalize embeddings
+query_embeddings = F.normalize(query_embeddings, p=2, dim=1)
+passage_embeddings = F.normalize(passage_embeddings, p=2, dim=1)
+
+scores = (query_embeddings @ passage_embeddings.T) * 100
+print(scores.tolist())
+
+
+✅Документация
+✅Модель 400M
+✅ Модель 2B
+
+ 
+📌Лицензирование моделей: CC-BY-NC-SA-4.0 License.
+
+
+#CodeAI #MLResearch #SOTA #OpenScience  #code #llm #ml
+============================================================
+2025-01-23T09:27:21
+🔥 Обобщение и переобучение в машинном обучении.
+
+- Видео 
+- Урок 1 / Урок2 / Урок3 / Урок4 /  Урок5 / 
+- Урок6/ Урок7/ Урок 8 
+- Colab
+-Полный курс
+
+#ml #math #mlmath #probability #машинноеобучение
+============================================================
+2025-01-23T16:10:15
+⚡️ Bespoke-Stratos-32B, новая ризонинг модель, разработанную на основе DeepSeek-R1 с использованием Sky-T1 от Berkeley NovaSky. 
+
+Модель превосходит Sky-T1 и o1-preview в тестах reasoning (математика и написаний кода) и почти достигает производительности DeepSeek-R1-Distill-Qwen-32B при обучении, котором было использовано 47 раз меньшее количество примеров!
+
+Важно отметить то, что разработчики используют набор данных с открытым исходным кодом.
+
+▪Data: https://huggingface.co/datasets/bespokelabs/Bespoke-Stratos-17k
+▪Curator: https://github.com/bespokelabsai/curator/
+▪32B model: https://huggingface.co/bespokelabs/Bespoke-Stratos-32B
+▪7B model: https://huggingface.co/bespokelabs/Bespoke-Stratos-7B
+▪Сode: https://github.com/bespokelabsai/curator/tree/main/examples/bespoke-stratos-data-generation
+
+@data_analysis_ml
+============================================================
+2025-01-23T20:21:14
+🖥 TinyTroupe — это экспериментальная библиотека на Python, которая позволяет моделировать взаимодействие искусственных агентов с различными личностями, интересами и целями!
+
+🌟 Используя мощь больших языковых моделей, таких как GPT-4, TinyTroupe создаёт реалистичные симуляции поведения. Эти агенты могут общаться друг с другом, реагировать на внешние стимулы и существовать в созданных мирах.
+
+🔐 Лицензия: MIT
+
+🖥 Github
+
+@pythonl
+============================================================
+2025-01-26T15:37:44
+🖥 srsly — это библиотека для Python, предлагающая высокопроизводительные утилиты сериализации данных!
+
+🌟 Она поддерживает несколько форматов, включая JSON, MessagePack, Pickle и YAML. Библиотека объединяет несколько популярных сериализационных пакетов, таких как ujson, msgpack, и cloudpickle, в одном пакете с удобным API.
+
+🔐 Лицензия: MIT
+
+🖥 Github
+============================================================
+2025-01-28T17:40:54
+🌟 14 алгоритмов сортировки за одну минуту!
+============================================================
+2025-01-31T14:01:17
+🖥 Совет по Python:
+
+🌟 Вы можете использовать словарь вместо длинного оператора if-else, чтобы сделать свой код понятным!
+============================================================
